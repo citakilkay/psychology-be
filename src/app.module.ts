@@ -4,9 +4,10 @@ import { PermissionsModule } from './app/permissions/permissions.module';
 import { RolesModule } from './app/roles/roles.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { SwaggerModule } from '@nestjs/swagger';
 
 @Module({
-  imports: [UsersModule, PermissionsModule, RolesModule, ConfigModule.forRoot(), TypeOrmModule.forRootAsync({
+  imports: [UsersModule, PermissionsModule, RolesModule, ConfigModule.forRoot({ isGlobal: true }), SwaggerModule, TypeOrmModule.forRootAsync({
     imports: [ConfigModule],
     useFactory: (config: ConfigService) => ({
       type: 'postgres',
@@ -16,7 +17,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       password: config.get('DB_PASSWORD'),
       database: config.get('DB_NAME'),
       autoLoadEntities: true,
-      synchronize: true
+      synchronize: true,
+      ssl: {
+        rejectUnauthorized: false,
+      }
     }),
     inject: [ConfigService],
   }),]
