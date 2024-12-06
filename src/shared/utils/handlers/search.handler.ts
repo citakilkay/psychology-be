@@ -1,6 +1,6 @@
 import { FindOptionsWhere, Like } from 'typeorm';
 
-export function createSearchConditions<T>(
+export function handleSearchConditions<T>(
     search: string | undefined,
     searchableFields: (keyof T)[]
 ): FindOptionsWhere<T>[] {

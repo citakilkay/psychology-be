@@ -14,8 +14,8 @@ export class Role extends EntityBase {
 
     @ManyToMany(() => Permission)
     @JoinTable()
-    permissions: Permission[]
+    permissions: Permission[] = []
 
     @ManyToOne(() => User, (user) => user.role)
-    users: User[]
+    users: User[] = []
 }

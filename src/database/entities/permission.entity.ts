@@ -7,7 +7,7 @@ export class Permission extends EntityBase {
     name: string;
 
     @Column({ default: true })
-    isEditable: boolean;
+    isEditable: boolean = true;
 
     @Column({ nullable: true })
     parent?: Permission;

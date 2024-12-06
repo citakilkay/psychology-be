@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/database/entities/user.entity';
-import { FindOptionsWhere, Like, Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { FilterUserDto } from './dto/filter-user.dto';
-import { createSearchConditions } from 'src/shared/utils/handlers/create-search.handler';
+import { handleSearchConditions } from 'src/shared/utils/handlers/search.handler';
 
 @Injectable()
 export class UsersService {
@@ -15,7 +15,7 @@ export class UsersService {
         const { isActive, search, page = 1, pageSize = 10, roleGroup, orderBy, orderDirection } = filterDto
         const skip = (page - 1) * pageSize;
         // Generate dynamic search conditions
-        const searchConditions = createSearchConditions<User>(search, ['username', 'firstName', 'lastName', 'emailAddress']);
+        const searchConditions = handleSearchConditions<User>(search, ['username', 'firstName', 'lastName', 'emailAddress']);
 
         const customWhereOptions: FindOptionsWhere<User>[] = [...searchConditions];
 

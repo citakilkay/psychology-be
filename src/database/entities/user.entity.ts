@@ -20,7 +20,7 @@ export class User extends EntityBase {
     password: string;
 
     @Column({ default: false })
-    isActive: boolean;
+    isActive: boolean = false;
     @ManyToOne(() => Role, (role) => role.users)
     role: Role
 }
