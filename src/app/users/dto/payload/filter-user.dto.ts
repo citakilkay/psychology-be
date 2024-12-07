@@ -3,7 +3,9 @@ import { User } from 'src/database/entities/user.entity';
 import { RoleGroup } from 'src/shared/enums/role-group.enum';
 import { IFilterDto } from 'src/shared/utils/filter-dto.interface';
 
-export class FilterUserDto implements IFilterDto<User> {
+const ORDER_BY_KEYS = ['username', 'firstName', 'lastName', 'emailAddress', 'createdAt', 'roleName'] as const;
+type OrderByKeys = typeof ORDER_BY_KEYS[number]
+export class FilterUserDto implements IFilterDto<User, OrderByKeys> {
     @ApiProperty({ default: '', required: false })
     search?: string;
 
@@ -13,8 +15,8 @@ export class FilterUserDto implements IFilterDto<User> {
     @ApiProperty({ required: false, default: 10 })
     pageSize?: number;
 
-    @ApiProperty({ required: false, enum: ['username', 'firstName', 'lastName', 'emailAddress', 'createdAt'], default: 'createdAt' })
-    orderBy?: keyof User; // Now constrained to User properties
+    @ApiProperty({ required: false, enum: ORDER_BY_KEYS, default: 'createdAt' })
+    orderBy?: OrderByKeys;
 
     @ApiProperty({ required: false, enum: ['ASC', 'DESC'], default: 'DESC' })
     orderDirection?: 'ASC' | 'DESC';

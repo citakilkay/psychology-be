@@ -5,7 +5,6 @@ import { FilterUserDto } from './dto/payload/filter-user.dto';
 import { User } from 'src/database/entities/user.entity';
 import { CreateUserDto } from './dto/payload/create-user.dto';
 import { UpdateUserDto } from './dto/payload/update-user.dto';
-import e from 'express';
 
 @ApiTags('users')
 @Controller('users')

@@ -11,8 +11,6 @@ export class UserDetailDto extends BaseUserDto {
 
     updatedAt?: Date;
 
-    deletedAt?: Date;
-
     @ApiProperty()
     @MinLength(6, { message: 'Password must have at least 6 character' })
     @Matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{1,}$/, { message: 'Password must have at least one letter and one number' })

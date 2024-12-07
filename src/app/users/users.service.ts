@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/database/entities/user.entity';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { FindOptionsWhere, Like, Repository } from 'typeorm';
 import { FilterUserDto } from './dto/payload/filter-user.dto';
 import { handleSearchConditions } from 'src/shared/utils/handlers/search.handler';
 import { UserDetailDto } from './dto/response/user-detail.dto';
@@ -18,22 +18,31 @@ export class UsersService {
         @InjectRepository(Role)
         private roleRepository: Repository<Role>,
     ) { }
-    async getAll(filterDto: FilterUserDto, /*user: User*/): Promise<[User[], number]> {
-        const { isActive, search, page = 1, pageSize = 10, roleGroup, orderBy, orderDirection } = filterDto
+    async getAll(filterDto: FilterUserDto, /*#TODO user: User*/): Promise<[User[], number]> {
+        const { search, page = 1, pageSize = 10, orderBy, orderDirection, ...otherFilters } = filterDto
         const skip = (page - 1) * pageSize;
         // Generate dynamic search conditions
         const searchConditions = handleSearchConditions<User>(search, ['username', 'firstName', 'lastName', 'emailAddress']);
 
         const customWhereOptions: FindOptionsWhere<User>[] = [...searchConditions];
 
-        if (isActive !== undefined) {
-            customWhereOptions.push({ isActive });
+        if (otherFilters.isActive === true || otherFilters.isActive === false) { //#TODO -- 3 tane if ve true mu false mu kontrolu daha iyi olsun
+            customWhereOptions.push({ isActive: otherFilters.isActive });
         }
-        if (roleGroup) {
+        if (otherFilters.roleGroup) {
             customWhereOptions.push(
                 {
                     role: {
-                        group: roleGroup
+                        group: otherFilters.roleGroup
+                    }
+                }
+            )
+        }
+        if (search) {
+            customWhereOptions.push(
+                {
+                    role: {
+                        name: Like(`%${search}%`)
                     }
                 }
             )
@@ -58,16 +67,16 @@ export class UsersService {
 
     async create(createUserDto: CreateUserDto): Promise<UserDetailDto> {
         const { password, roleId, ...userData } = createUserDto;
-
         const hashedPassword = await this.hashPassword(password)
         const role = await this.roleRepository.findOne({ where: { id: roleId } })
         if (!role) {
             throw new HttpException(`Role with id ${roleId} not found`, HttpStatus.NOT_FOUND);
         }
-        return await this.userRepository.save({ ...userData, role, password: hashedPassword })
+        return await this.userRepository.save({ ...userData, role, password: hashedPassword }) //#TODO response mapping
     }
 
     async update(id: string, updateUserDto: UpdateUserDto): Promise<UserDetailDto> {
+        const userToUpdate = await this.userRepository.findOne({ where: { id } })
         return
     }
 

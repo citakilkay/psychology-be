@@ -1,7 +1,7 @@
-export interface IFilterDto<T> {
+export interface IFilterDto<T, OrderByKeys> {
     search?: string;
     page?: number;
     pageSize?: number;
-    orderBy?: keyof T; // Restrict to keys of the entity
+    orderBy?: OrderByKeys; // Restrict to keys of the entity
     orderDirection?: 'ASC' | 'DESC';
 }
