@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, OneToMany } from "typeorm";
+import { Column, Entity, ManyToOne } from "typeorm";
 import { EntityBase } from "./common/base.entity";
 import { Role } from "./role.entity";
 
@@ -21,6 +21,7 @@ export class User extends EntityBase {
 
     @Column({ default: false })
     isActive: boolean = false;
-    @ManyToOne(() => Role, (role) => role.users)
-    role: Role
+
+    @ManyToOne(() => Role, (role) => role.users, { nullable: false })
+    role: Role;
 }

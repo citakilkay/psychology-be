@@ -1,17 +1,19 @@
-import { Column, Entity, OneToMany } from "typeorm";
+import { Column, Entity, Index, ManyToOne, OneToMany, Unique } from "typeorm";
 import { EntityBase } from "./common/base.entity";
 
 @Entity()
+@Unique('unique_name_within_parent', ['name', 'parent'])
 export class Permission extends EntityBase {
-    @Column({ unique: true, nullable: false })
+    @Column({ nullable: false })
     name: string;
 
     @Column({ default: true })
-    isEditable: boolean = true;
+    isEditable: boolean;
 
-    @Column({ nullable: true })
+    @ManyToOne(() => Permission, (permission) => permission.childPermissions, { nullable: true, onDelete: 'CASCADE' })
+    @Index()
     parent?: Permission;
 
     @OneToMany(_type => Permission, permission => permission.parent, { cascade: ['soft-remove'] })
-    childPermissions: Permission[] = []
+    childPermissions: Permission[]
 }
