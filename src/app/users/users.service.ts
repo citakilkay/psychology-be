@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/database/entities/user.entity';
-import { FindOptionsWhere, Like, Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, Like, Repository } from 'typeorm';
 import { FilterUserDto } from './dto/payload/filter-user.dto';
 import { handleSearchConditions } from 'src/shared/utils/handlers/search.handler';
 import { UserDetailDto } from './dto/response/user-detail.dto';
@@ -9,6 +9,7 @@ import { CreateUserDto } from './dto/payload/create-user.dto';
 import { UpdateUserDto } from './dto/payload/update-user.dto';
 import * as bcrypt from 'bcrypt';
 import { Role } from 'src/database/entities/role.entity';
+import { instanceToInstance, plainToClass, plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class UsersService {
@@ -26,7 +27,7 @@ export class UsersService {
 
         const customWhereOptions: FindOptionsWhere<User>[] = [...searchConditions];
 
-        if (otherFilters.isActive === true || otherFilters.isActive === false) { //#TODO -- 3 tane if ve true mu false mu kontrolu daha iyi olsun
+        if (typeof otherFilters.isActive === 'boolean') { // #TEST isActive when undefined
             customWhereOptions.push({ isActive: otherFilters.isActive });
         }
         if (otherFilters.roleGroup) {
@@ -42,7 +43,7 @@ export class UsersService {
             customWhereOptions.push(
                 {
                     role: {
-                        name: Like(`%${search}%`)
+                        name: ILike(`%${search}%`)
                     }
                 }
             )
@@ -72,12 +73,17 @@ export class UsersService {
         if (!role) {
             throw new HttpException(`Role with id ${roleId} not found`, HttpStatus.NOT_FOUND);
         }
-        return await this.userRepository.save({ ...userData, role, password: hashedPassword }) //#TODO response mapping
+        const createdUser: User = await this.userRepository.save({ ...userData, role, password: hashedPassword })
+        return plainToInstance(UserDetailDto, createdUser, { excludeExtraneousValues: true });
     }
 
     async update(id: string, updateUserDto: UpdateUserDto): Promise<UserDetailDto> {
         const userToUpdate = await this.userRepository.findOne({ where: { id } })
-        return
+        // Merge updateUserDto into userToUpdate
+        const userData = plainToInstance(User, { ...userToUpdate, ...updateUserDto });
+
+        const updatedUser = await this.userRepository.save(userData);
+        return plainToInstance(UserDetailDto, updatedUser, { excludeExtraneousValues: true });
     }
 
     async delete(id: string): Promise<User> {

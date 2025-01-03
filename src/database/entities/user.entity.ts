@@ -1,6 +1,7 @@
 import { Column, Entity, ManyToOne } from "typeorm";
 import { EntityBase } from "./common/base.entity";
 import { Role } from "./role.entity";
+import { Expose } from "class-transformer";
 
 @Entity()
 export class User extends EntityBase {
@@ -17,6 +18,7 @@ export class User extends EntityBase {
     emailAddress: string;
 
     @Column({ nullable: false })
+    @Expose()
     password: string;
 
     @Column({ default: false })

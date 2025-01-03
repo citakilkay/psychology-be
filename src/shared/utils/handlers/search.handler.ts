@@ -1,4 +1,4 @@
-import { FindOptionsWhere, Like } from 'typeorm';
+import { FindOptionsWhere, ILike } from 'typeorm';
 
 export function handleSearchConditions<T>(
     search: string | undefined,
@@ -9,6 +9,6 @@ export function handleSearchConditions<T>(
     }
 
     return searchableFields.map((field) => ({
-        [field]: Like(`%${search}%`),
+        [field]: ILike(`%${search}%`),
     })) as FindOptionsWhere<T>[];
 }
