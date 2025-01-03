@@ -3,7 +3,7 @@ import { User } from 'src/database/entities/user.entity';
 import { RoleGroup } from 'src/shared/enums/role-group.enum';
 import { IFilterDto } from 'src/shared/utils/filter-dto.interface';
 
-const ORDER_BY_KEYS = ['username', 'firstName', 'lastName', 'emailAddress', 'createdAt', 'roleName'] as const;
+const ORDER_BY_KEYS = ['username', 'firstName', 'lastName', 'emailAddress', 'createdAt', 'updatedAt', 'roleName'] as const;
 type OrderByKeys = typeof ORDER_BY_KEYS[number]
 export class FilterUserDto implements IFilterDto<User, OrderByKeys> {
     @ApiProperty({ default: '', required: false })

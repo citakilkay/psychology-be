@@ -45,4 +45,6 @@ export class UsersController {
     async delete(@Param('id') id: string): Promise<User> {
         return await this.userService.delete(id)
     }
+
+    // #TODO -- changePassword endpoint after auth 
 }

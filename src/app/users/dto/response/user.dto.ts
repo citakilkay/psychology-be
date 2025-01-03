@@ -5,13 +5,11 @@ import { Transform } from "class-transformer";
 
 export class UserDto extends BaseUserDto {
 
-    id: string;
-
-    createdAt: Date;
-
     @IsUUID()
     @ApiProperty()
-    userId: string;
+    id: string;
+    @ApiProperty()
+    createdAt: Date;
 
     @IsUUID()
     @ApiProperty()

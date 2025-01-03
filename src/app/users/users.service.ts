@@ -9,7 +9,7 @@ import { CreateUserDto } from './dto/payload/create-user.dto';
 import { UpdateUserDto } from './dto/payload/update-user.dto';
 import * as bcrypt from 'bcrypt';
 import { Role } from 'src/database/entities/role.entity';
-import { instanceToInstance, plainToClass, plainToInstance } from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class UsersService {
@@ -48,14 +48,13 @@ export class UsersService {
                 }
             )
         }
-        const [users, total] = await this.userRepository.findAndCount({
+        const [users, total] = await this.userRepository.findAndCount({ // #TEST -- is password excluded? if so remove the unnecessary dtos (user-detai.dto),
             where: customWhereOptions.length > 0 ? customWhereOptions : {},
             relations: ['role'],
             skip,
             take: pageSize,
             order: { [orderBy]: orderDirection },
         });
-
         return [users, total];
     }
     async get(id: string): Promise<User> {

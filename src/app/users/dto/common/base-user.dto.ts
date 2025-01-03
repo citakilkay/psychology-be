@@ -1,23 +1,21 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsOptional, MinLength } from "class-validator";
-import { Column } from "typeorm";
+import { IsEmail, MinLength } from "class-validator";
 
 export abstract class BaseUserDto {
     @ApiProperty()
     @MinLength(6, { message: 'Username is too short' })
     username: string;
 
-    @Column({ nullable: true })
+    @ApiProperty({ nullable: true })
     firstName?: string;
 
-    @Column({ nullable: true })
+    @ApiProperty({ nullable: true })
     lastName?: string;
 
-    @ApiProperty()
+    @ApiProperty({ default: false })
     isActive: boolean = false;
 
     @ApiProperty()
-    @IsOptional()
     @IsEmail({}, { message: 'Email address is not valid' })
     emailAddress: string;
 }

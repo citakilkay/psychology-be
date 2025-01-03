@@ -5,10 +5,14 @@ import { Role } from "src/database/entities/role.entity";
 
 export class UserDetailDto extends BaseUserDto {
 
+    @IsUUID()
+    @ApiProperty()
     id: string;
 
+    @ApiProperty()
     createdAt: Date;
 
+    @ApiProperty()
     updatedAt?: Date;
 
     @IsUUID()
