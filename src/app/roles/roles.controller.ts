@@ -1,8 +1,7 @@
-import { Controller, Get, HttpStatus, Param, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { RolesService } from './roles.service';
-import { Role } from 'src/database/entities/role.entity';
-import { FilterRoleDto } from './dto/payload/filter-role.dto';
+import { CreateRoleDto, FilterRoleDto, RoleDetailDto, RoleDto, UpdateRoleDto } from './dto';
 
 @ApiTags('roles')
 @Controller('roles')
@@ -13,15 +12,34 @@ export class RolesController {
     @ApiResponse({ status: HttpStatus.PARTIAL_CONTENT })
     // @UseGuards(RolesGuard)
     // @Roles(Role.Admin, Role.SuperAdmin)
-    async getAll(@Query() filterRoleDto: FilterRoleDto, /*@GetUser() user */): Promise<[Role[], number]> {
+    async getAll(@Query() filterRoleDto: FilterRoleDto, /*@GetUser() user */): Promise<[RoleDto[], number]> {
         return await this.roleService.getAll(filterRoleDto /*,user */)
     }
     @Get('/:id')
     @ApiOperation({ summary: 'Get Role by Id' })
     @ApiResponse({ status: HttpStatus.OK })
-    async get(@Param('id') id: string) {
+    async get(@Param('id') id: string): Promise<RoleDetailDto> {
         return await this.roleService.get(id)
     }
 
-    
+    @Post()
+    @ApiOperation({ summary: 'Create a Role' })
+    @ApiResponse({ status: HttpStatus.CREATED })
+    async create(@Body() createRoleDto: CreateRoleDto): Promise<RoleDetailDto> {
+        return await this.roleService.create(createRoleDto)
+    }
+
+    @Put('/:id')
+    @ApiOperation({ summary: 'Update a Role' })
+    @ApiResponse({ status: HttpStatus.OK })
+    async update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto): Promise<RoleDetailDto> {
+        return await this.roleService.update(id, updateRoleDto)
+    }
+
+    @Delete('/:id')
+    @ApiOperation({ summary: 'Delete a Role' })
+    @ApiResponse({ status: HttpStatus.NO_CONTENT })
+    async delete(@Param('id') id: string): Promise<void> {
+        return await this.roleService.delete(id)
+    }
 }

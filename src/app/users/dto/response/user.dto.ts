@@ -8,6 +8,7 @@ export class UserDto extends BaseUserDto {
     @IsUUID()
     @ApiProperty()
     id: string;
+
     @ApiProperty()
     createdAt: Date;
 

@@ -1,15 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/database/entities/user.entity';
-import { FindOptionsWhere, ILike, Like, Repository } from 'typeorm';
-import { FilterUserDto } from './dto/payload/filter-user.dto';
-import { handleSearchConditions } from 'src/shared/utils/handlers/search.handler';
-import { UserDetailDto } from './dto/response/user-detail.dto';
-import { CreateUserDto } from './dto/payload/create-user.dto';
-import { UpdateUserDto } from './dto/payload/update-user.dto';
+import { FindOptionsWhere, ILike, Repository } from 'typeorm';
+import { handleSearchConditions } from 'src/shared/utils/handlers';
 import * as bcrypt from 'bcrypt';
-import { Role } from 'src/database/entities/role.entity';
 import { plainToInstance } from 'class-transformer';
+import { Role, User } from 'src/database/entities';
+import { CreateUserDto, FilterUserDto, UpdateUserDto, UserDetailDto, UserDto } from './dto';
 
 @Injectable()
 export class UsersService {
@@ -19,7 +15,7 @@ export class UsersService {
         @InjectRepository(Role)
         private roleRepository: Repository<Role>,
     ) { }
-    async getAll(filterDto: FilterUserDto, /*#TODO user: User*/): Promise<[User[], number]> {
+    async getAll(filterDto: FilterUserDto, /*#TODO user: User*/): Promise<[UserDto[], number]> {
         const { search, page = 1, pageSize = 10, orderBy, orderDirection, ...otherFilters } = filterDto
         const skip = (page - 1) * pageSize;
         // Generate dynamic search conditions
@@ -55,12 +51,15 @@ export class UsersService {
             take: pageSize,
             order: { [orderBy]: orderDirection },
         });
-        return [users, total];
+
+        const usersToResponse = plainToInstance(UserDto, users, { excludeExtraneousValues: true });
+
+        return [usersToResponse, total];
     }
-    async get(id: string): Promise<User> {
+    async get(id: string): Promise<UserDetailDto> {
         const user = await this.userRepository.findOne({ where: { id } })
         if (user) {
-            return user;
+            return plainToInstance(UserDetailDto, user, { excludeExtraneousValues: true });
         }
         throw new HttpException(`User with ID ${id} is not found`, HttpStatus.NOT_FOUND);
     }
@@ -85,12 +84,13 @@ export class UsersService {
         return plainToInstance(UserDetailDto, updatedUser, { excludeExtraneousValues: true });
     }
 
-    async delete(id: string): Promise<User> {
+    async delete(id: string): Promise<void> {
         const deleteToUser = await this.userRepository.findOne({ where: { id } })
         if (!deleteToUser) {
             throw new HttpException(`User with id ${id} not found`, HttpStatus.NOT_FOUND);
         }
-        return await this.userRepository.softRemove(deleteToUser)
+        await this.userRepository.softRemove(deleteToUser)
+        return
     }
 
     private async hashPassword(password: string): Promise<string> {
