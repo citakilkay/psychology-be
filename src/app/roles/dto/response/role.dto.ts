@@ -1,5 +1,5 @@
 import { IsUUID } from "class-validator";
-import { BaseRoleDto } from "../common/base-role.dto";
+import { BaseRoleDto } from "../base-role.dto";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class RoleDto extends BaseRoleDto {

@@ -7,6 +7,12 @@ export class Permission extends EntityBase {
     @Column({ nullable: false })
     name: string;
 
+    @Column({ nullable: true })
+    description: string;
+
+    @Column({ default: false })
+    isDefault: boolean;
+
     @Column({ default: true })
     isEditable: boolean;
 
@@ -16,4 +22,6 @@ export class Permission extends EntityBase {
 
     @OneToMany(_type => Permission, permission => permission.parent, { cascade: ['soft-remove'] })
     childPermissions: Permission[]
+
+    
 }

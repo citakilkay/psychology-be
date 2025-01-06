@@ -71,7 +71,7 @@ export class UsersService {
         if (!role) {
             throw new HttpException(`Role with id ${roleId} not found`, HttpStatus.NOT_FOUND);
         }
-        const createdUser: User = await this.userRepository.save({ ...userData, role, password: hashedPassword })
+        const createdUser = await this.userRepository.create({ ...userData, role, password: hashedPassword })
         return plainToInstance(UserDetailDto, createdUser, { excludeExtraneousValues: true });
     }
 
@@ -82,6 +82,7 @@ export class UsersService {
 
         const updatedUser = await this.userRepository.save(userData);
         return plainToInstance(UserDetailDto, updatedUser, { excludeExtraneousValues: true });
+
     }
 
     async delete(id: string): Promise<void> {

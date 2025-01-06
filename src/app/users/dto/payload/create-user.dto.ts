@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsUUID, Matches, MinLength } from "class-validator";
-import { BaseUserDto } from "../common/base-user.dto";
+import { BaseUserDto } from "../base-user.dto";
 
 export class CreateUserDto extends BaseUserDto {
 

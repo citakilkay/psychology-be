@@ -2,18 +2,20 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { handleSearchConditions } from 'src/shared/utils/handlers';
 import { FindOptionsWhere, In, Repository } from 'typeorm';
-import { CreateRoleDto, FilterRoleDto, RoleDetailDto, RoleDto } from './dto';
+import { CreateRoleDto, FilterRoleDto, RoleDetailDto, RoleDto, UpdateRoleDto } from './dto';
 import { plainToInstance } from 'class-transformer';
 import { UserDto } from '../users/dto';
-import { Permission, Role } from 'src/database/entities';
+import { Permission, Role, RolePermission } from 'src/database/entities';
 
 @Injectable()
 export class RolesService {
     constructor(
         @InjectRepository(Role)
         private roleRepository: Repository<Role>,
-        @InjectRepository(Role)
+        @InjectRepository(Permission)
         private permissionRepository: Repository<Permission>,
+        @InjectRepository(RolePermission)
+        private rolePermissionRepository: Repository<RolePermission>,
     ) { }
     async getAll(filterDto: FilterRoleDto, /*#TODO user: User*/): Promise<[RoleDto[], number]> {
         const { search, page = 1, pageSize = 10, orderBy, orderDirection, roleGroup } = filterDto
@@ -38,32 +40,50 @@ export class RolesService {
     }
 
     async get(id: string): Promise<RoleDetailDto> {
-        const role = await this.roleRepository.findOne({ where: { id } })
+        const role = await this.roleRepository.findOne({ where: { id }, relations: { rolePermissions: { permission: true } } })
         if (role) {
             return plainToInstance(RoleDetailDto, role, { excludeExtraneousValues: true });
-
         }
         throw new HttpException(`Role with ID ${id} is not found`, HttpStatus.NOT_FOUND);
     }
 
     async create(createRoleDto: CreateRoleDto): Promise<RoleDetailDto> {
-        const { permissionIds, ...roleData } = createRoleDto;
-        const permissions = this.permissionRepository.findBy({ id: In(permissionIds) })
-        if (permissionIds.length == permissions) {
-
-        }
-        if (!role) {
-            throw new HttpException(`Role with id ${roleId} not found`, HttpStatus.NOT_FOUND);
-        }
-        const createdUser: User = await this.userRepository.save({ ...userData, role, password: hashedPassword })
-        return plainToInstance(UserDetailDto, createdUser, { excludeExtraneousValues: true });
-    }
-    async update() {
-
+        const createdRole = await this.roleRepository.create({ ...createRoleDto })
+        const permissions = await this.permissionRepository.find()
+        const rolePermissions = permissions.map(permission => {
+            const rolePermission = new RolePermission()
+            rolePermission.isActive = permission.isDefault
+            rolePermission.role = createdRole
+            rolePermission.permission = permission
+            return rolePermission
+        })
+        await this.rolePermissionRepository.save(rolePermissions)
+        return plainToInstance(RoleDetailDto, createdRole, { excludeExtraneousValues: true });
     }
 
-    async delete() {
+    async update(id: string, updateRoleDto: UpdateRoleDto): Promise<RoleDetailDto> {
+        const { rolePermissionIds, ...otherFields } = updateRoleDto
+        const roleToUpdate = await this.roleRepository.findOne({ where: { id } })
+        if (roleToUpdate) {
+            const rolePermissions = await this.rolePermissionRepository.findBy({ id: In([rolePermissionIds]) })
+            if (rolePermissionIds.length == rolePermissions.length) {
+                const roleData = plainToInstance(Role, { ...roleToUpdate, ...otherFields, rolePermissions });
+                const updatedRole = await this.roleRepository.save(roleData);
+                return plainToInstance(RoleDetailDto, updatedRole, { excludeExtraneousValues: true });
+            }
+            const missingPermissionIds = rolePermissionIds.filter(i => !rolePermissions.map(x => x.id).includes(i))
+            throw new HttpException(`Permissions with ids ${missingPermissionIds.join(' | ')} not found`, HttpStatus.NOT_FOUND);
+        }
+        throw new HttpException(`Role with id ${id} not found`, HttpStatus.NOT_FOUND);
+    }
 
+    async delete(id: string): Promise<void> {
+        const deleteToRole = await this.roleRepository.findOne({ where: { id } })
+        if (!deleteToRole) {
+            throw new HttpException(`Role with id ${id} not found`, HttpStatus.NOT_FOUND);
+        }
+        await this.roleRepository.softRemove(deleteToRole)
+        return
     }
 
     async getUsersofRole(id: string): Promise<[UserDto[], number]> {

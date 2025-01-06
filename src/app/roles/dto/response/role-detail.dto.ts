@@ -1,7 +1,7 @@
 import { IsUUID } from "class-validator";
-import { BaseRoleDto } from "../common/base-role.dto";
+import { BaseRoleDto } from "../base-role.dto";
 import { ApiProperty, ApiResponseProperty } from "@nestjs/swagger";
-import { Permission, User } from "src/database/entities";
+import { RolePermission, User } from "src/database/entities";
 
 export class RoleDetailDto extends BaseRoleDto {
     @IsUUID()
@@ -18,5 +18,5 @@ export class RoleDetailDto extends BaseRoleDto {
     users: User[] = [] // #TEST -- password exclude ediliyor mu kontrol et. Ediliyorsa UserDto olarak değistir burayi
 
     @ApiProperty({ nullable: true })
-    permissions: Permission[] = []
+    rolePermissions: RolePermission[] = [] // #TEST -- RolePermissionlara bak
 }
