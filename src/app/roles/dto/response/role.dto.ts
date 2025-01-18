@@ -5,7 +5,7 @@ import { ApiProperty } from "@nestjs/swagger";
 export class RoleDto extends BaseRoleDto {
     @IsUUID()
     @ApiProperty()
-    id?: string;
+    id: string;
 
     @ApiProperty({ nullable: true })
     createdAt: Date;

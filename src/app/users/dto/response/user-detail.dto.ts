@@ -15,7 +15,6 @@ export class UserDetailDto extends BaseUserDto {
     @ApiProperty()
     updatedAt?: Date;
 
-    @IsUUID()
     @ApiProperty()
     role: Role;
 }

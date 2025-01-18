@@ -6,12 +6,12 @@ import { RolePermission, User } from "src/database/entities";
 export class RoleDetailDto extends BaseRoleDto {
     @IsUUID()
     @ApiProperty()
-    id?: string;
+    id: string;
 
-    @ApiResponseProperty()
+    @ApiProperty()
     createdAt: Date;
 
-    @ApiResponseProperty()
+    @ApiProperty()
     updatedAt?: Date;
 
     @ApiProperty({ nullable: true })

@@ -4,6 +4,9 @@ export abstract class BasePermissionDto {
     @ApiProperty()
     name: string;
 
+    @ApiProperty()
+    description: string;
+
     @ApiProperty({ default: false })
     isDefault?: boolean = false;
 

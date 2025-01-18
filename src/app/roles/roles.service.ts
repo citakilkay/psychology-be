@@ -40,7 +40,7 @@ export class RolesService {
     }
 
     async get(id: string): Promise<RoleDetailDto> {
-        const role = await this.roleRepository.findOne({ where: { id }, relations: { rolePermissions: { permission: true } } })
+        const role = await this.roleRepository.findOne({ where: { id }, relations: { rolePermissions: { permission: true }, users: true } })
         if (role) {
             return plainToInstance(RoleDetailDto, role, { excludeExtraneousValues: true });
         }
@@ -57,6 +57,7 @@ export class RolesService {
             rolePermission.permission = permission
             return rolePermission
         })
+        const 
         await this.rolePermissionRepository.save(rolePermissions)
         return plainToInstance(RoleDetailDto, createdRole, { excludeExtraneousValues: true });
     }
@@ -83,10 +84,6 @@ export class RolesService {
             throw new HttpException(`Role with id ${id} not found`, HttpStatus.NOT_FOUND);
         }
         await this.roleRepository.softRemove(deleteToRole)
-        return
-    }
-
-    async getUsersofRole(id: string): Promise<[UserDto[], number]> {
         return
     }
 }

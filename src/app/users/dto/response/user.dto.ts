@@ -12,7 +12,6 @@ export class UserDto extends BaseUserDto {
     @ApiProperty()
     createdAt: Date;
 
-    @IsUUID()
     @ApiProperty()
     @Transform(({ obj }) => obj.role?.name ?? null)
     roleName: string;

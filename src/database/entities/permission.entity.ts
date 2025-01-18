@@ -20,8 +20,6 @@ export class Permission extends EntityBase {
     @Index()
     parent?: Permission;
 
-    @OneToMany(_type => Permission, permission => permission.parent, { cascade: ['soft-remove'] })
+    @OneToMany(_type => Permission, permission => permission.parent, { cascade: ['remove'] }) // #TEST -- sikinti cikarsa softremove yap
     childPermissions: Permission[]
-
-    
 }
