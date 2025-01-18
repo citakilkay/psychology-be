@@ -9,7 +9,7 @@ export class RolePermission {
     @ManyToOne(() => Role, (role) => role.rolePermissions, { onDelete: 'CASCADE' })
     role: Role;
 
-    @ManyToOne(() => Permission, { onDelete: 'CASCADE' }) // Removed inverseSide reference
+    @ManyToOne(() => Permission, (permission) => permission.rolePermissions, { onDelete: 'CASCADE' }) // Removed inverseSide reference
     permission: Permission;
 
     @Column({ default: false })

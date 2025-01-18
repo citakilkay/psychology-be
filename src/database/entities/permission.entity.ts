@@ -1,5 +1,6 @@
 import { Column, Entity, Index, ManyToOne, OneToMany, Unique } from "typeorm";
 import { EntityBase } from "./common/base.entity";
+import { RolePermission } from "./role-permission.entity";
 
 @Entity()
 @Unique('unique_name_within_parent', ['name', 'parent'])
@@ -20,6 +21,9 @@ export class Permission extends EntityBase {
     @Index()
     parent?: Permission;
 
-    @OneToMany(_type => Permission, permission => permission.parent, { cascade: ['remove'] }) // #TEST -- sikinti cikarsa softremove yap
-    childPermissions: Permission[]
+    @OneToMany(() => Permission, permission => permission.parent, { cascade: ['remove'] }) // #TEST -- sikinti cikarsa softremove yap
+    childPermissions: Permission[];
+
+    @OneToMany(() => RolePermission, rolePermission => rolePermission.permission)
+    rolePermissions: RolePermission[];
 }
