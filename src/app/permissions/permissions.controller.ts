@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PermissionsService } from './permissions.service';
-import { CreatePermissionDto, PermissionDetailDto, PermissionDto } from './dto';
+import { CreatePermissionDto, PermissionDetailDto, PermissionDto, UpdatePermissionDto } from './dto';
 
 @ApiTags('permissions')
 @Controller('permissions')
@@ -32,8 +32,8 @@ export class PermissionsController {
     @Put('/:id')
     @ApiOperation({ summary: 'Update a Permission' })
     @ApiResponse({ status: HttpStatus.OK })
-    async update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto): Promise<RoleDetailDto> {
-        return await this.permissionService.update(id, updateRoleDto)
+    async update(@Param('id') id: string, @Body() updatePermissionDto: UpdatePermissionDto): Promise<PermissionDetailDto> {
+        return await this.permissionService.update(id, updatePermissionDto)
     }
 
     @Delete('/:id')

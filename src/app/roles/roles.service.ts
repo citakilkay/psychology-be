@@ -48,17 +48,25 @@ export class RolesService {
     }
 
     async create(createRoleDto: CreateRoleDto): Promise<RoleDetailDto> {
-        const createdRole = await this.roleRepository.create({ ...createRoleDto })
-        const permissions = await this.permissionRepository.find()
+        // Step 1: Save the role
+        const createdRole = await this.roleRepository.save(createRoleDto);
+
+        // Step 2: Fetch all permissions
+        const permissions = await this.permissionRepository.find();
+
+        // Step 3: Map permissions to RolePermission
         const rolePermissions = permissions.map(permission => {
-            const rolePermission = new RolePermission()
-            rolePermission.isActive = permission.isDefault
-            rolePermission.role = createdRole
-            rolePermission.permission = permission
-            return rolePermission
-        })
-        const 
-        await this.rolePermissionRepository.save(rolePermissions)
+            const rolePermission = new RolePermission();
+            rolePermission.isActive = permission.isDefault;
+            rolePermission.role = createdRole;
+            rolePermission.permission = permission;
+            return rolePermission;
+        });
+
+        // Step 4: Save rolePermissions
+        await this.rolePermissionRepository.save(rolePermissions);
+
+        // Step 5: Return the response mapped to RoleDetailDto
         return plainToInstance(RoleDetailDto, createdRole, { excludeExtraneousValues: true });
     }
 
