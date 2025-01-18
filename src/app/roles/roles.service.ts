@@ -2,9 +2,9 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { handleSearchConditions } from 'src/shared/utils/handlers';
 import { FindOptionsWhere, In, Repository } from 'typeorm';
-import { CreateRoleDto, FilterRoleDto, RoleDetailDto, RoleDto, UpdateRoleDto } from './dto';
+import { CreateRoleDto, FilterRoleDto, UpdateRoleDto } from './dto/payload.dto';
+import { RoleDetailDto, RoleDto } from './dto/response.dto';
 import { plainToInstance } from 'class-transformer';
-import { UserDto } from '../users/dto';
 import { Permission, Role, RolePermission } from 'src/database/entities';
 
 @Injectable()

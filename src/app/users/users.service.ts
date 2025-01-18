@@ -5,8 +5,8 @@ import { handleSearchConditions } from 'src/shared/utils/handlers';
 import * as bcrypt from 'bcrypt';
 import { plainToInstance } from 'class-transformer';
 import { Role, User } from 'src/database/entities';
-import { CreateUserDto, FilterUserDto, UpdateUserDto, UserDetailDto, UserDto } from './dto';
-
+import { CreateUserDto, FilterUserDto, UpdateUserDto } from './dto/payload.dto';
+import { UserDetailDto, UserDto } from './dto/response.dto';
 @Injectable()
 export class UsersService {
     constructor(
