@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import 'reflect-metadata';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { snapshot: true });
   const configService = app.get(ConfigService);
 
   // Swagger configuration
@@ -18,7 +18,7 @@ async function bootstrap() {
 
   // Create Swagger document
   const document = SwaggerModule.createDocument(app, config);
-  
+
   // Setup Swagger UI at /api route
   SwaggerModule.setup('api-docs', app, document);
 

@@ -32,7 +32,9 @@ export class PermissionsService {
     async create(createPermissionDto: CreatePermissionDto): Promise<PermissionDetailDto> {
         const parentPermission = await this.permissionRepository.findOne({ where: { id: createPermissionDto.parentId } })
         const createdPermission = await this.permissionRepository.create({ ...createPermissionDto })
-        createdPermission.parent = parentPermission
+        if(createPermissionDto.parentId) {
+            createdPermission.parent = parentPermission
+        }
         await this.permissionRepository.save(createdPermission)
         return plainToInstance(PermissionDetailDto, createdPermission, { excludeExtraneousValues: true });
     }

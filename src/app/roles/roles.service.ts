@@ -19,6 +19,9 @@ export class RolesService {
     ) { }
     async getAll(filterDto: FilterRoleDto, /*#TODO user: User*/): Promise<[RoleDto[], number]> {
         const { search, page = 1, pageSize = 10, orderBy, orderDirection, roleGroup } = filterDto
+        console.log("first")
+        debugger;
+        console.log("last")
         const skip = (page - 1) * pageSize;
 
         // Generate dynamic search conditions
