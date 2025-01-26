@@ -14,7 +14,6 @@ export class RolesController {
     // @UseGuards(RolesGuard)
     // @Roles(Role.Admin, Role.SuperAdmin)
     async getAll(@Query() filterRoleDto: FilterRoleDto, /*@GetUser() user */): Promise<[RoleDto[], number]> {
-        console.log(filterRoleDto);
         return await this.roleService.getAll(filterRoleDto /*,user */)
     }
     @Get('/:id')
