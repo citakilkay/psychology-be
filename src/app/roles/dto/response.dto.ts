@@ -1,33 +1,38 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsUUID } from "class-validator";
 import { RoleGroup } from "src/shared/enums/role-group.enum";
 import { RolePermission, User } from "src/database/entities";
+import { Expose } from 'class-transformer';
 
 abstract class ResponseBaseRoleDto {
-    @IsUUID()
     @ApiProperty()
+    @Expose()
     id: string;
 
     @ApiProperty()
+    @Expose()
     createdAt: Date;
 
     @ApiProperty()
+    @Expose()
     name: string;
 
     @ApiProperty({ nullable: false, enum: RoleGroup })
+    @Expose()
     group: RoleGroup;
-
 }
 
 export class RoleDto extends ResponseBaseRoleDto { }
 
 export class RoleDetailDto extends ResponseBaseRoleDto {
     @ApiProperty({ nullable: true })
+    @Expose()
     updatedAt?: Date;
 
-    @ApiProperty({ nullable: true })
+    @ApiProperty({ type: [User] })
+    @Expose()
     users: User[] = []
 
-    @ApiProperty({ nullable: true })
+    @ApiProperty({ type: [RolePermission] })
+    @Expose()
     rolePermissions: RolePermission[] = []
 } 

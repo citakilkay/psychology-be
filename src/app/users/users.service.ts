@@ -38,9 +38,7 @@ export class UsersService {
         if (search) {
             customWhereOptions.push(
                 {
-                    role: {
-                        name: ILike(`%${search}%`)
-                    }
+                    role: { name: ILike(`%${search}%`) }
                 }
             )
         }
@@ -52,14 +50,14 @@ export class UsersService {
             order: { [orderBy]: orderDirection },
         });
 
-        const usersToResponse = plainToInstance(UserDto, users, { excludeExtraneousValues: true });
+        const usersToResponse = await plainToInstance(UserDto, users, { excludeExtraneousValues: true });
 
         return [usersToResponse, total];
     }
     async get(id: string): Promise<UserDetailDto> {
         const user = await this.userRepository.findOne({ where: { id } })
         if (user) {
-            return plainToInstance(UserDetailDto, user, { excludeExtraneousValues: true });
+            return await plainToInstance(UserDetailDto, user, { excludeExtraneousValues: true });
         }
         throw new HttpException(`User with ID ${id} is not found`, HttpStatus.NOT_FOUND);
     }
@@ -71,18 +69,17 @@ export class UsersService {
         if (!role) {
             throw new HttpException(`Role with id ${roleId} not found`, HttpStatus.NOT_FOUND);
         }
-        const createdUser = await this.userRepository.create({ ...userData, role, password: hashedPassword })
-        return plainToInstance(UserDetailDto, createdUser, { excludeExtraneousValues: true });
+        const createdUser = await this.userRepository.save({ ...userData, role, password: hashedPassword })
+        return await plainToInstance(UserDetailDto, createdUser, { excludeExtraneousValues: true });
     }
 
     async update(id: string, updateUserDto: UpdateUserDto): Promise<UserDetailDto> {
         const userToUpdate = await this.userRepository.findOne({ where: { id } })
         // Merge updateUserDto into userToUpdate
-        const userData = plainToInstance(User, { ...userToUpdate, ...updateUserDto });
+        const userData = await plainToInstance(User, { ...userToUpdate, ...updateUserDto });
 
         const updatedUser = await this.userRepository.save(userData);
-        return plainToInstance(UserDetailDto, updatedUser, { excludeExtraneousValues: true });
-
+        return await plainToInstance(UserDetailDto, updatedUser, { excludeExtraneousValues: true });
     }
 
     async delete(id: string): Promise<void> {

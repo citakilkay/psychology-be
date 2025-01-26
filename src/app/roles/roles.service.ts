@@ -19,9 +19,6 @@ export class RolesService {
     ) { }
     async getAll(filterDto: FilterRoleDto, /*#TODO user: User*/): Promise<[RoleDto[], number]> {
         const { search, page = 1, pageSize = 10, orderBy, orderDirection, roleGroup } = filterDto
-        console.log("first")
-        debugger;
-        console.log("last")
         const skip = (page - 1) * pageSize;
 
         // Generate dynamic search conditions
@@ -77,14 +74,16 @@ export class RolesService {
         const { rolePermissionIds, ...otherFields } = updateRoleDto
         const roleToUpdate = await this.roleRepository.findOne({ where: { id } })
         if (roleToUpdate) {
-            const rolePermissions = await this.rolePermissionRepository.findBy({ id: In([rolePermissionIds]) })
-            if (rolePermissionIds.length == rolePermissions.length) {
-                const roleData = plainToInstance(Role, { ...roleToUpdate, ...otherFields, rolePermissions });
-                const updatedRole = await this.roleRepository.save(roleData);
-                return plainToInstance(RoleDetailDto, updatedRole, { excludeExtraneousValues: true });
-            }
-            const missingPermissionIds = rolePermissionIds.filter(i => !rolePermissions.map(x => x.id).includes(i))
-            throw new HttpException(`Permissions with ids ${missingPermissionIds.join(' | ')} not found`, HttpStatus.NOT_FOUND);
+            const rolePermissions = await this.rolePermissionRepository.findBy({ role: { id }, permission: { isDefault: false } })
+            rolePermissions.map(rolePermission => {
+                rolePermissionIds.includes(rolePermission.id) ?
+                    rolePermission.isActive = true :
+                    rolePermission.isActive = false
+            })
+            await this.rolePermissionRepository.save(rolePermissions)
+            const roleData = plainToInstance(Role, { ...roleToUpdate, ...otherFields });
+            const updatedRole = await this.roleRepository.save(roleData);
+            return plainToInstance(RoleDetailDto, updatedRole, { excludeExtraneousValues: true });
         }
         throw new HttpException(`Role with id ${id} not found`, HttpStatus.NOT_FOUND);
     }

@@ -1,46 +1,53 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsUUID, MinLength } from "class-validator";
-import { Role } from "src/database/entities/role.entity";
-import { Transform } from "class-transformer";
+import { Transform, Expose } from "class-transformer";
+import { RoleDto } from "src/app/roles/dto/response.dto";
 
 abstract class ResponseBaseUserDto {
-    @IsUUID()
     @ApiProperty()
+    @Expose()
     id: string;
-    
+
     @ApiProperty()
+    @Expose()
     createdAt: Date;
 
     @ApiProperty()
-    @MinLength(6, { message: 'Username is too short' })
+    @Expose()
     username: string;
 
     @ApiProperty({ nullable: true })
+    @Expose()
     firstName?: string;
 
     @ApiProperty({ nullable: true })
+    @Expose()
     lastName?: string;
 
     @ApiProperty({ default: false })
+    @Expose()
     isActive: boolean = false;
 
     @ApiProperty()
-    @IsEmail({}, { message: 'Email address is not valid' })
+    @Expose()
     emailAddress: string;
-} 
+}
 
 export class UserDto extends ResponseBaseUserDto {
-
-    @ApiProperty()
-    @Transform(({ obj }) => obj.role?.name ?? null)
+    @Expose()
+    @Transform(({ obj }) => obj.role.name)
     roleName: string;
+
+    @ApiProperty({ nullable: true })
+    @Expose()
+    updatedAt?: Date;
 }
 
 export class UserDetailDto extends ResponseBaseUserDto {
-
-    @ApiProperty()
+    @ApiProperty({ nullable: true })
+    @Expose()
     updatedAt?: Date;
 
-    @ApiProperty()
-    role: Role;
+    @ApiProperty({ type: RoleDto }) // #TEST -- dto or entity? RoleDto or Role.entity?
+    @Expose()
+    role: RoleDto;
 } 
