@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ClassSerializerInterceptor, HttpException, HttpStatus, Injectable, UseInterceptors } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { handleSearchConditions } from 'src/shared/utils/handlers';
@@ -7,6 +7,7 @@ import { plainToInstance } from 'class-transformer';
 import { Role, User } from 'src/database/entities';
 import { CreateUserDto, FilterUserDto, UpdateUserDto } from './dto/payload.dto';
 import { UserDetailDto, UserDto } from './dto/response.dto';
+
 @Injectable()
 export class UsersService {
     constructor(
@@ -23,7 +24,7 @@ export class UsersService {
 
         const customWhereOptions: FindOptionsWhere<User>[] = [...searchConditions];
 
-        if (typeof otherFilters.isActive === 'boolean') { // #TEST isActive when undefined
+        if (typeof otherFilters.isActive === 'boolean') {
             customWhereOptions.push({ isActive: otherFilters.isActive });
         }
         if (otherFilters.roleGroup) {
@@ -42,7 +43,7 @@ export class UsersService {
                 }
             )
         }
-        const [users, total] = await this.userRepository.findAndCount({ // #TEST -- is password excluded? if so remove the unnecessary dtos (user-detai.dto),
+        const [users, total] = await this.userRepository.findAndCount({
             where: customWhereOptions.length > 0 ? customWhereOptions : {},
             relations: ['role'],
             skip,
@@ -55,7 +56,7 @@ export class UsersService {
         return [usersToResponse, total];
     }
     async get(id: string): Promise<UserDetailDto> {
-        const user = await this.userRepository.findOne({ where: { id } })
+        const user = await this.userRepository.findOne({ where: { id }, relations: ['role'] })
         if (user) {
             return await plainToInstance(UserDetailDto, user, { excludeExtraneousValues: true });
         }

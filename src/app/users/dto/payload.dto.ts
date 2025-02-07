@@ -21,7 +21,7 @@ abstract class PayloadBaseUserDto {
     @ApiProperty()
     @IsEmail({}, { message: 'Email address is not valid' })
     emailAddress: string;
-} 
+}
 
 export class CreateUserDto extends PayloadBaseUserDto {
     @ApiProperty()

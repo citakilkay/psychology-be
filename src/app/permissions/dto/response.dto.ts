@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Permission } from "src/database/entities";
+import { plainToInstance, Transform } from "class-transformer";
 
 abstract class ResponseBasePermissionDto {
     @ApiProperty()
@@ -24,18 +24,17 @@ abstract class ResponseBasePermissionDto {
 export class PermissionDto extends ResponseBasePermissionDto {
     @ApiProperty()
     updatedAt?: Date;
-
-    @ApiProperty({ type: Permission, description: 'Parent Permission' })
-    parent?: Permission;
 }
 
 export class PermissionDetailDto extends ResponseBasePermissionDto {
     @ApiProperty()
     updatedAt?: Date;
 
-    @ApiProperty({ type: [Permission], description: 'Array of child permission' })
-    childPermissions: Permission[] = []
+    @ApiProperty({ type: [PermissionDto], description: 'Array of child permission' })
+    @Transform(({ obj }) => plainToInstance(PermissionDto, obj.childPermissions, { groups: ['updatedAt', 'isDefault', 'isEditable', 'id', 'createdAt', 'name', 'description'] }))
+    childPermissions: PermissionDto[] = [] //#TODO group ile isteneni veriyor mu
 
-    @ApiProperty({ type: Permission, description: 'Parent Permission' })
-    parent?: Permission;
+    @ApiProperty({ type: PermissionDto, description: 'Parent Permission' })
+    @Transform(({ obj }) => plainToInstance(PermissionDto, obj.parent, { groups: ['updatedAt', 'isDefault', 'isEditable', 'id', 'createdAt', 'name', 'description'] }))
+    parent?: PermissionDto;
 } 

@@ -35,13 +35,14 @@ export class RolesService {
             take: pageSize,
             order: { [orderBy]: orderDirection },
         });
+
         const rolesToResponse = plainToInstance(RoleDto, roles, { excludeExtraneousValues: true });
         return [rolesToResponse, total];
     }
 
     async get(id: string): Promise<RoleDetailDto> {
-        const role = await this.roleRepository.findOne({ where: { id }, relations: { rolePermissions: { permission: true }, users: true } })
-        if (role) {
+        const role = await this.roleRepository.findOne({ where: { id }, relations: { rolePermissions: { permission: true } } })
+        if (role) { // #TODO: users {role: {name: true}}
             return plainToInstance(RoleDetailDto, role, { excludeExtraneousValues: true });
         }
         throw new HttpException(`Role with ID ${id} is not found`, HttpStatus.NOT_FOUND);

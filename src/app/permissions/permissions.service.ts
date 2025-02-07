@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToInstance } from 'class-transformer';
 import { Permission, Role } from 'src/database/entities';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, Repository } from 'typeorm';
 import { CreatePermissionDto, UpdatePermissionDto } from './dto/payload.dto';
 import { PermissionDetailDto, PermissionDto } from './dto/response.dto';
 
@@ -16,23 +16,23 @@ export class PermissionsService {
     ) { }
     async getAllParentPermissions(): Promise<[PermissionDto[], number]> {
         const [permissions, count] = await this.permissionRepository.findAndCount({
-            where: { parent: null },
+            where: { parent: IsNull() }
         })
-        return [plainToInstance(PermissionDto, permissions, { excludeExtraneousValues: true }), count];
+        return [plainToInstance(PermissionDto, permissions), count];
     }
 
     async get(id: string): Promise<PermissionDetailDto> {
         const permission = await this.permissionRepository.findOne({ where: { id }, relations: { childPermissions: true, parent: true } })
         if (permission) {
-            return plainToInstance(PermissionDetailDto, permission, { excludeExtraneousValues: true });
+            return plainToInstance(PermissionDetailDto, permission);
         }
         throw new HttpException(`Permission with ID ${id} is not found`, HttpStatus.NOT_FOUND)
     }
 
     async create(createPermissionDto: CreatePermissionDto): Promise<PermissionDetailDto> {
-        const parentPermission = await this.permissionRepository.findOne({ where: { id: createPermissionDto.parentId } })
         const createdPermission = await this.permissionRepository.create({ ...createPermissionDto })
-        if(createPermissionDto.parentId) {
+        if (createPermissionDto.parentId) {
+            const parentPermission = await this.permissionRepository.findOne({ where: { id: createPermissionDto.parentId } })
             createdPermission.parent = parentPermission
         }
         await this.permissionRepository.save(createdPermission)

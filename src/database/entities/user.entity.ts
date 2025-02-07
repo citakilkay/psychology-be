@@ -1,7 +1,7 @@
 import { Column, Entity, ManyToOne } from "typeorm";
 import { EntityBase } from "./common/base.entity";
 import { Role } from "./role.entity";
-import { Exclude } from "class-transformer";
+import { Exclude, Expose } from "class-transformer";
 
 @Entity()
 export class User extends EntityBase {
@@ -14,7 +14,7 @@ export class User extends EntityBase {
     @Column({ nullable: true })
     lastName?: string;
 
-    @Column({ unique: true })
+    @Column({ unique: true, nullable: false })
     emailAddress: string;
 
     @Column({ nullable: false })

@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Transform, Expose } from "class-transformer";
+import { Expose, Transform, plainToInstance } from "class-transformer";
 import { RoleDto } from "src/app/roles/dto/response.dto";
 
 abstract class ResponseBaseUserDto {
@@ -44,10 +44,10 @@ export class UserDto extends ResponseBaseUserDto {
 
 export class UserDetailDto extends ResponseBaseUserDto {
     @ApiProperty({ nullable: true })
-    @Expose()
     updatedAt?: Date;
 
-    @ApiProperty({ type: RoleDto }) // #TEST -- dto or entity? RoleDto or Role.entity?
+    @ApiProperty({ type: RoleDto })
+    @Transform(({ obj }) => plainToInstance(RoleDto, obj.role))
     @Expose()
     role: RoleDto;
 } 
