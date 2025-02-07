@@ -1,7 +1,7 @@
 import { Column, Entity, ManyToOne } from "typeorm";
 import { EntityBase } from "./common/base.entity";
 import { Role } from "./role.entity";
-import { Exclude, Expose } from "class-transformer";
+import { Exclude } from "class-transformer";
 
 @Entity()
 export class User extends EntityBase {
