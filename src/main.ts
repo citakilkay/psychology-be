@@ -4,6 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import 'reflect-metadata';
 import { ValidationPipe } from '@nestjs/common';
+import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { snapshot: true });
@@ -11,6 +12,9 @@ async function bootstrap() {
 
   // Set up global validation pipe
   app.useGlobalPipes(new ValidationPipe());
+
+  // Apply the global exception filter
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // Swagger configuration
   const config = new DocumentBuilder()

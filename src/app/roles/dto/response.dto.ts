@@ -31,7 +31,7 @@ export class RoleDto extends ResponseBaseRoleDto { }
 export class RoleDetailDto extends ResponseBaseRoleDto {
 
     @ApiProperty({ type: [UserDto] }) // #TODO: Omit<UserDto, 'roleName'>[]
-    @Transform(({ obj }) => plainToInstance(UserDto, obj.users, { excludeExtraneousValues: true }))
+    @Transform(({ obj }) => plainToInstance(UserDto, obj.users, { strategy: 'excludeAll' }))
     @Expose()
     users: UserDto[] = []
 
@@ -44,6 +44,6 @@ export class RoleDetailDto extends ResponseBaseRoleDto {
     //excludeExtraneousValues?: boolean; 
     @ApiProperty({ type: [RolePermission] })
     @Expose()
-    @Transform(({ obj }) => plainToInstance(RolePermission, obj.rolePermissions, { excludeExtraneousValues: true }))
+    @Transform(({ obj }) => plainToInstance(RolePermission, obj.rolePermissions))
     rolePermissions: RolePermission[] = []
 } 

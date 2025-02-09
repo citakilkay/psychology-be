@@ -21,7 +21,7 @@ export class RolesService {
         const { search, page = 1, pageSize = 10, orderBy, orderDirection, roleGroup } = filterDto
         const skip = (page - 1) * pageSize;
 
-        // Generate dynamic search conditions
+
         const searchConditions = handleSearchConditions<Role>(search, ['name']);
         const customWhereOptions: FindOptionsWhere<Role>[] = [...searchConditions];
 
@@ -40,9 +40,10 @@ export class RolesService {
         return [rolesToResponse, total];
     }
 
+
     async get(id: string): Promise<RoleDetailDto> {
-        const role = await this.roleRepository.findOne({ where: { id }, relations: { rolePermissions: { permission: true } } })
-        if (role) { // #TODO: users {role: {name: true}}
+        const role = await this.roleRepository.findOne({ where: { id }, relations: { rolePermissions: { permission: true }, users: { role: true } } })
+        if (role) {
             return plainToInstance(RoleDetailDto, role, { excludeExtraneousValues: true });
         }
         throw new HttpException(`Role with ID ${id} is not found`, HttpStatus.NOT_FOUND);
@@ -63,12 +64,17 @@ export class RolesService {
             rolePermission.permission = permission;
             return rolePermission;
         });
-
-        // Step 4: Save rolePermissions
-        await this.rolePermissionRepository.save(rolePermissions);
-
+        try {
+            // Step 4: Save rolePermissions
+            await this.rolePermissionRepository.save(rolePermissions);
+            return plainToInstance(RoleDetailDto, createdRole, { excludeExtraneousValues: true });
+        } catch (err) {
+            if (err.code === '23505') {
+                throw new HttpException('Role already exists', HttpStatus.CONFLICT);
+            }
+            throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
+        }
         // Step 5: Return the response mapped to RoleDetailDto
-        return plainToInstance(RoleDetailDto, createdRole, { excludeExtraneousValues: true });
     }
 
     async update(id: string, updateRoleDto: UpdateRoleDto): Promise<RoleDetailDto> {
@@ -83,8 +89,15 @@ export class RolesService {
             })
             await this.rolePermissionRepository.save(rolePermissions)
             const roleData = plainToInstance(Role, { ...roleToUpdate, ...otherFields });
-            const updatedRole = await this.roleRepository.save(roleData);
-            return plainToInstance(RoleDetailDto, updatedRole, { excludeExtraneousValues: true });
+            try {
+                const updatedRole = await this.roleRepository.save(roleData);
+                return plainToInstance(RoleDetailDto, updatedRole, { excludeExtraneousValues: true });
+            } catch (err) {
+                if (err.code === '23505') {
+                    throw new HttpException('Role already exists', HttpStatus.CONFLICT);
+                }
+                throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
+            }
         }
         throw new HttpException(`Role with id ${id} not found`, HttpStatus.NOT_FOUND);
     }

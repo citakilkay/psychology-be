@@ -33,12 +33,12 @@ abstract class ResponseBaseUserDto {
 }
 
 export class UserDto extends ResponseBaseUserDto {
-    @Expose()
+    @Expose({ groups: ['userservice'] })
     @Transform(({ obj }) => obj.role.name)
     roleName: string;
 
     @ApiProperty({ nullable: true })
-    @Expose()
+    @Expose({ groups: ['userservice'] })
     updatedAt?: Date;
 }
 
@@ -47,7 +47,7 @@ export class UserDetailDto extends ResponseBaseUserDto {
     updatedAt?: Date;
 
     @ApiProperty({ type: RoleDto })
-    @Transform(({ obj }) => plainToInstance(RoleDto, obj.role))
+    @Transform(({ obj }) => plainToInstance(RoleDto, obj.role, { excludeExtraneousValues: true }))
     @Expose()
     role: RoleDto;
 } 

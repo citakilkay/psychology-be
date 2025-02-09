@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, ILike, Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, QueryFailedError, Repository } from 'typeorm';
 import { handleSearchConditions } from 'src/shared/utils/handlers';
 import * as bcrypt from 'bcrypt';
 import { plainToInstance } from 'class-transformer';
@@ -17,6 +17,8 @@ export class UsersService {
         private roleRepository: Repository<Role>,
     ) { }
     async getAll(filterDto: FilterUserDto, /*#TODO user: User*/): Promise<[UserDto[], number]> {
+        const ff: any = {}
+        console.log(ff.e.e)
         const { search, page = 1, pageSize = 10, orderBy, orderDirection, ...otherFilters } = filterDto
         const skip = (page - 1) * pageSize;
         // Generate dynamic search conditions
@@ -46,12 +48,13 @@ export class UsersService {
         const [users, total] = await this.userRepository.findAndCount({
             where: customWhereOptions.length > 0 ? customWhereOptions : {},
             relations: ['role'],
+            select: { role: { name: true } },
             skip,
             take: pageSize,
             order: { [orderBy]: orderDirection },
         });
 
-        const usersToResponse = await plainToInstance(UserDto, users, { excludeExtraneousValues: true });
+        const usersToResponse = await plainToInstance(UserDto, users, { excludeExtraneousValues: true, groups: ['userservice'] });
 
         return [usersToResponse, total];
     }
@@ -64,6 +67,7 @@ export class UsersService {
     }
 
     async create(createUserDto: CreateUserDto): Promise<UserDetailDto> {
+
         const { password, roleId, ...userData } = createUserDto;
         const hashedPassword = await this.hashPassword(password)
         const role = await this.roleRepository.findOne({ where: { id: roleId } })
