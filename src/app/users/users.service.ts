@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, ILike, QueryFailedError, Repository } from 'typeorm';
-import { handleSearchConditions } from 'src/shared/utils/handlers';
+import { extractConflictColumn, handleSearchConditions } from 'src/shared/utils/handlers';
 import * as bcrypt from 'bcrypt';
 import { plainToInstance } from 'class-transformer';
 import { Role, User } from 'src/database/entities';
@@ -17,8 +17,6 @@ export class UsersService {
         private roleRepository: Repository<Role>,
     ) { }
     async getAll(filterDto: FilterUserDto, /*#TODO user: User*/): Promise<[UserDto[], number]> {
-        const ff: any = {}
-        console.log(ff.e.e)
         const { search, page = 1, pageSize = 10, orderBy, orderDirection, ...otherFilters } = filterDto
         const skip = (page - 1) * pageSize;
         // Generate dynamic search conditions
@@ -54,14 +52,14 @@ export class UsersService {
             order: { [orderBy]: orderDirection },
         });
 
-        const usersToResponse = await plainToInstance(UserDto, users, { excludeExtraneousValues: true, groups: ['userservice'] });
+        const usersToResponse = plainToInstance(UserDto, users, { excludeExtraneousValues: true, groups: ['userservice'] });
 
         return [usersToResponse, total];
     }
     async get(id: string): Promise<UserDetailDto> {
         const user = await this.userRepository.findOne({ where: { id }, relations: ['role'] })
         if (user) {
-            return await plainToInstance(UserDetailDto, user, { excludeExtraneousValues: true });
+            return plainToInstance(UserDetailDto, user, { excludeExtraneousValues: true });
         }
         throw new HttpException(`User with ID ${id} is not found`, HttpStatus.NOT_FOUND);
     }
@@ -74,18 +72,40 @@ export class UsersService {
         if (!role) {
             throw new HttpException(`Role with id ${roleId} not found`, HttpStatus.NOT_FOUND);
         }
-        const createdUser = await this.userRepository.save({ ...userData, role, password: hashedPassword })
-        return await plainToInstance(UserDetailDto, createdUser, { excludeExtraneousValues: true });
+        try {
+            const createdUser = await this.userRepository.save({ ...userData, role, password: hashedPassword })
+            return plainToInstance(UserDetailDto, createdUser, { excludeExtraneousValues: true });
+        } catch (err) {
+            if (err.code === '23505' && err instanceof QueryFailedError) {
+                const conflictColumn = extractConflictColumn(err.driverError.detail)
+                throw new HttpException(`A user with the given ${conflictColumn} already exists`, HttpStatus.CONFLICT);
+            }
+            if (err.status) {
+                throw new HttpException(err.message, err.status);
+            }
+            throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
+        }
     }
 
     async update(id: string, updateUserDto: UpdateUserDto): Promise<UserDetailDto> {
         const userToUpdate = await this.userRepository.findOne({ where: { id } })
         // Merge updateUserDto into userToUpdate
-        const userData = await plainToInstance(User, { ...userToUpdate, ...updateUserDto });
-
-        const updatedUser = await this.userRepository.save(userData);
-        return await plainToInstance(UserDetailDto, updatedUser, { excludeExtraneousValues: true });
+        const userData = plainToInstance(User, { ...userToUpdate, ...updateUserDto });
+        try {
+            const updatedUser = await this.userRepository.save(userData);
+            return plainToInstance(UserDetailDto, updatedUser, { excludeExtraneousValues: true });
+        } catch (err) {
+            if (err.code === '23505' && err instanceof QueryFailedError) {
+                const conflictColumn = extractConflictColumn(err.driverError.detail)
+                throw new HttpException(`A user with the given ${conflictColumn} already exists`, HttpStatus.CONFLICT);
+            }
+            if (err.status) {
+                throw new HttpException(err.message, err.status);
+            }
+            throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
+        }
     }
+
 
     async delete(id: string): Promise<void> {
         const deleteToUser = await this.userRepository.findOne({ where: { id } })

@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { handleSearchConditions } from 'src/shared/utils/handlers';
-import { FindOptionsWhere, In, Repository } from 'typeorm';
+import { extractConflictColumn, extractReferencedTable, handleSearchConditions } from 'src/shared/utils/handlers';
+import { FindOptionsWhere, In, QueryFailedError, Repository } from 'typeorm';
 import { CreateRoleDto, FilterRoleDto, UpdateRoleDto } from './dto/payload.dto';
 import { RoleDetailDto, RoleDto } from './dto/response.dto';
 import { plainToInstance } from 'class-transformer';
@@ -51,50 +51,63 @@ export class RolesService {
 
     async create(createRoleDto: CreateRoleDto): Promise<RoleDetailDto> {
         // Step 1: Save the role
-        const createdRole = await this.roleRepository.save(createRoleDto);
-
-        // Step 2: Fetch all permissions
-        const permissions = await this.permissionRepository.find();
-
-        // Step 3: Map permissions to RolePermission
-        const rolePermissions = permissions.map(permission => {
-            const rolePermission = new RolePermission();
-            rolePermission.isActive = permission.isDefault;
-            rolePermission.role = createdRole;
-            rolePermission.permission = permission;
-            return rolePermission;
-        });
         try {
+            const createdRole = await this.roleRepository.save(createRoleDto);
+            // Step 2: Fetch all permissions
+            const permissions = await this.permissionRepository.find();
+            // Step 3: Map permissions to RolePermission
+            const rolePermissions = permissions.map(permission => {
+                const rolePermission = new RolePermission();
+                rolePermission.isActive = permission.isDefault;
+                rolePermission.role = createdRole;
+                rolePermission.permission = permission;
+                return rolePermission;
+            });
             // Step 4: Save rolePermissions
             await this.rolePermissionRepository.save(rolePermissions);
+
+            // Step 5: Return the response mapped to RoleDetailDto
             return plainToInstance(RoleDetailDto, createdRole, { excludeExtraneousValues: true });
         } catch (err) {
-            if (err.code === '23505') {
-                throw new HttpException('Role already exists', HttpStatus.CONFLICT);
+            if (err.code === '23505' && err instanceof QueryFailedError) {
+                const conflictColumn = extractConflictColumn(err.driverError.detail)
+                // duplicate username or emailaddress
+                throw new HttpException(`A role with the given ${conflictColumn} already exists`, HttpStatus.CONFLICT);
+            }
+
+            if (err.status) {
+                throw new HttpException(err.message, err.status);
             }
             throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
         }
-        // Step 5: Return the response mapped to RoleDetailDto
     }
+
+
 
     async update(id: string, updateRoleDto: UpdateRoleDto): Promise<RoleDetailDto> {
         const { rolePermissionIds, ...otherFields } = updateRoleDto
         const roleToUpdate = await this.roleRepository.findOne({ where: { id } })
         if (roleToUpdate) {
-            const rolePermissions = await this.rolePermissionRepository.findBy({ role: { id }, permission: { isDefault: false } })
-            rolePermissions.map(rolePermission => {
-                rolePermissionIds.includes(rolePermission.id) ?
-                    rolePermission.isActive = true :
-                    rolePermission.isActive = false
-            })
-            await this.rolePermissionRepository.save(rolePermissions)
-            const roleData = plainToInstance(Role, { ...roleToUpdate, ...otherFields });
             try {
+                const rolePermissions = await this.rolePermissionRepository.findBy({ role: { id }, permission: { isDefault: false } })
+                rolePermissions.map(rolePermission => {
+                    rolePermissionIds.includes(rolePermission.id) ?
+
+                        rolePermission.isActive = true :
+                        rolePermission.isActive = false
+                })
+                await this.rolePermissionRepository.save(rolePermissions)
+                const roleData = plainToInstance(Role, { ...roleToUpdate, ...otherFields });
                 const updatedRole = await this.roleRepository.save(roleData);
                 return plainToInstance(RoleDetailDto, updatedRole, { excludeExtraneousValues: true });
             } catch (err) {
-                if (err.code === '23505') {
-                    throw new HttpException('Role already exists', HttpStatus.CONFLICT);
+                if (err.code === '23505' && err instanceof QueryFailedError) {
+                    const conflictColumn = extractConflictColumn(err.driverError.detail)
+                    // duplicate username or emailaddress
+                    throw new HttpException(`A role with the given ${conflictColumn} already exists`, HttpStatus.CONFLICT);
+                }
+                if (err.status) {
+                    throw new HttpException(err.message, err.status);
                 }
                 throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
             }
@@ -107,7 +120,17 @@ export class RolesService {
         if (!deleteToRole) {
             throw new HttpException(`Role with id ${id} not found`, HttpStatus.NOT_FOUND);
         }
-        await this.roleRepository.softRemove(deleteToRole)
-        return
+        try {
+            await this.roleRepository.remove(deleteToRole)
+            return
+        } catch (err) {
+            if (err.code === '23503' && err instanceof QueryFailedError) {
+                const conflictColumn = extractReferencedTable(err.driverError.detail)
+                throw new HttpException(`Role with id ${id} is associated with a user`, HttpStatus.CONFLICT);
+            } if (err.status) {
+                throw new HttpException(err.message, err.status);
+            }
+            throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
+        }
     }
 }
