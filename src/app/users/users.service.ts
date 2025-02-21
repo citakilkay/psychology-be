@@ -1,8 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, ILike, QueryFailedError, Repository } from 'typeorm';
-import { extractConflictColumn, handleSearchConditions } from 'src/shared/utils/handlers';
-import * as bcrypt from 'bcrypt';
+import { extractConflictColumn, handleSearchConditions, hashPassword } from 'src/shared/utils/handlers';
 import { plainToInstance } from 'class-transformer';
 import { Role, User } from 'src/database/entities';
 import { CreateUserDto, FilterUserDto, UpdateUserDto } from './dto/payload.dto';
@@ -67,7 +66,7 @@ export class UsersService {
     async create(createUserDto: CreateUserDto): Promise<UserDetailDto> {
 
         const { password, roleId, ...userData } = createUserDto;
-        const hashedPassword = await this.hashPassword(password)
+        const hashedPassword = await hashPassword(password)
         const role = await this.roleRepository.findOne({ where: { id: roleId } })
         if (!role) {
             throw new HttpException(`Role with id ${roleId} not found`, HttpStatus.NOT_FOUND);
@@ -78,7 +77,7 @@ export class UsersService {
         } catch (err) {
             if (err.code === '23505' && err instanceof QueryFailedError) {
                 const conflictColumn = extractConflictColumn(err.driverError.detail)
-                throw new HttpException(`A user with the given ${conflictColumn} already exists`, HttpStatus.CONFLICT);
+                throw new HttpException(`A user with the given value ${conflictColumn} already exists`, HttpStatus.CONFLICT);
             }
             if (err.status) {
                 throw new HttpException(err.message, err.status);
@@ -115,10 +114,4 @@ export class UsersService {
         await this.userRepository.softRemove(deleteToUser)
         return
     }
-
-    private async hashPassword(password: string): Promise<string> {
-        const salt = await bcrypt.genSalt();
-        return bcrypt.hash(password, salt);
-    }
-
 }
