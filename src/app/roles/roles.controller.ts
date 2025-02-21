@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { RolesService } from './roles.service';
 import { CreateRoleDto, FilterRoleDto, UpdateRoleDto } from './dto/payload.dto';
@@ -8,6 +8,7 @@ import { RoleDetailDto, RoleDto } from './dto/response.dto';
 @Controller('roles')
 export class RolesController {
     constructor(private roleService: RolesService) { }
+    @HttpCode(HttpStatus.PARTIAL_CONTENT)
     @Get()
     @ApiOperation({ summary: 'Get All Roles' })
     @ApiResponse({ status: HttpStatus.PARTIAL_CONTENT })
@@ -16,6 +17,7 @@ export class RolesController {
     async getAll(@Query() filterRoleDto: FilterRoleDto, /*@GetUser() user */): Promise<[RoleDto[], number]> {
         return await this.roleService.getAll(filterRoleDto /*,user */)
     }
+
     @Get('/:id')
     @ApiOperation({ summary: 'Get Role by Id' })
     @ApiResponse({ status: HttpStatus.OK })
@@ -29,7 +31,7 @@ export class RolesController {
     async create(@Body() createRoleDto: CreateRoleDto): Promise<RoleDetailDto> {
         return await this.roleService.create(createRoleDto)
     }
-
+    @HttpCode(HttpStatus.OK)
     @Put('/:id')
     @ApiOperation({ summary: 'Update a Role' })
     @ApiResponse({ status: HttpStatus.OK })
@@ -37,6 +39,7 @@ export class RolesController {
         return await this.roleService.update(id, updateRoleDto)
     }
 
+    @HttpCode(HttpStatus.NO_CONTENT)
     @Delete('/:id')
     @ApiOperation({ summary: 'Delete a Role' })
     @ApiResponse({ status: HttpStatus.NO_CONTENT })

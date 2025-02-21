@@ -11,9 +11,9 @@ export class LoginCredentialsDto {
     @Matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{1,}$/, { message: 'Password must have at least one letter and one number' })
     password: string;
 
-    @ApiProperty({ default: false })
-    @IsBoolean()
-    rememberMe: boolean = false;
+    // @ApiProperty({ default: false }) // #TODO:  add rememberme
+    // @IsBoolean()
+    // rememberMe: boolean = false;
 }
 
 export class RegisterCredentialsDto {

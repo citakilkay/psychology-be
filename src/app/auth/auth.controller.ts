@@ -1,10 +1,10 @@
-import { Body, Controller, HttpStatus, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { AuthService } from "./auth.service";
 import { LoginCredentialsDto, RegisterCredentialsDto } from "./dto";
 import { LocalAuthGuard } from "./guards";
-import { Request } from 'express';
 import { UserDetailDto } from "../users/dto/response.dto";
+import { Request } from "express";
 
 @Controller('auth')
 @ApiTags('auth')
@@ -18,12 +18,14 @@ export class AuthController {
         return await this.authService.register(registerCredentials)
     }
 
+    @HttpCode(HttpStatus.OK)
     @UseGuards(LocalAuthGuard)
     @Post('login')
     @ApiOperation({ summary: 'Login with Local Authenticate' })
     @ApiResponse({ status: HttpStatus.OK })
-    async login(@Body() loginCredentials: LoginCredentialsDto, @Req() req: Request): Promise<{ accessToken: string }> {
+    async login(@Req() req: Request): Promise<{ accessToken: string }> {
         const user = req.user;
-        return await this.authService.login(loginCredentials)
+        //return await this.authService.login(loginCredentials)
+        return { accessToken: 'accessToken' }
     }
 }

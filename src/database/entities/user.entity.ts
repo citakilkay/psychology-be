@@ -27,4 +27,6 @@ export class User extends EntityBase {
 
     @ManyToOne(() => Role, (role) => role.users, { nullable: false })
     role: Role;
+
+    // #TODO: last login date
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto, FilterUserDto, UpdateUserDto } from './dto/payload.dto';
@@ -8,6 +8,8 @@ import { UserDetailDto, UserDto } from './dto/response.dto';
 @Controller('users')
 export class UsersController {
     constructor(private userService: UsersService) { }
+
+    @HttpCode(HttpStatus.PARTIAL_CONTENT)
     @Get()
     @ApiOperation({ summary: 'Get All User' })
     @ApiResponse({ status: HttpStatus.PARTIAL_CONTENT })
@@ -31,13 +33,14 @@ export class UsersController {
         return await this.userService.create(createUserDto)
     }
 
+    @HttpCode(HttpStatus.OK)
     @Put('/:id')
     @ApiOperation({ summary: 'Update a User' })
     @ApiResponse({ status: HttpStatus.OK })
     async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<UserDetailDto> {
         return await this.userService.update(id, updateUserDto)
     }
-
+    @HttpCode(HttpStatus.NO_CONTENT)
     @Delete('/:id')
     @ApiOperation({ summary: 'Delete a User' })
     @ApiResponse({ status: HttpStatus.NO_CONTENT })
