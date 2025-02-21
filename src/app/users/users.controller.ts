@@ -1,14 +1,16 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto, FilterUserDto, UpdateUserDto } from './dto/payload.dto';
 import { UserDetailDto, UserDto } from './dto/response.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
     constructor(private userService: UsersService) { }
 
+    @UseGuards(JwtAuthGuard)
     @HttpCode(HttpStatus.PARTIAL_CONTENT)
     @Get()
     @ApiOperation({ summary: 'Get All User' })

@@ -13,6 +13,7 @@ type DBConfig = {
 }
 type JWTConfig = {
     JWT_SECRET: string;
+    JWT_EXPIRED_IN_HOURS: number;
 }
 type ServerConfig = {
     PORT: number;
@@ -38,6 +39,7 @@ export function getConfig(): Config {
         },
         jwt: {
             JWT_SECRET: mustGetEnv('JWT_SECRET'),
+            JWT_EXPIRED_IN_HOURS: getIntEnv('JWT_EXPIRED_IN_HOURS', 72)
         },
         server: {
             PORT: getIntEnv('PORT', 3000),

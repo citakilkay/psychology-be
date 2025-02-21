@@ -1,5 +1,5 @@
-export class AccessTokenDto {
+export class LoginResponseDto {
     accessToken: string;
-    expireInSeconds: number;
+    expireInHours: number;
     userId: string;
 }
