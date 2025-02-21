@@ -30,7 +30,6 @@ const sslRejectUnauthorized = config.db.SSL_REJECT_UNAUTHORIZED;
         }
       }),
       inject: [ConfigService],
-    }),
-    AuthModule]
+    })]
 })
 export class AppModule { }
