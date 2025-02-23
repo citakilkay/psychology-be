@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { AuthService } from "./auth.service";
-import { RequestWithUser, LoginCredentialsDto, LoginResponseDto, RegisterCredentialsDto } from "./dto";
+import { RequestWithUser, LoginCredentialsDto, LoginResponseDto, RegisterCredentialsDto, RefreshTokenResponseDto } from "./dto";
 import { LocalAuthGuard } from "./guards";
 import { UserDetailDto } from "../users/dto/response.dto";
 import { RefreshAuthGuard } from "./guards/refresh-auth.guard";
@@ -35,9 +35,9 @@ export class AuthController {
     @UseGuards(RefreshAuthGuard)
     @Post('refresh-token')
     @ApiOperation({ summary: 'Refresh Token' })
-    @ApiResponse({ status: HttpStatus.OK })
-    async refreshToken(@Req() req: RequestWithUser) {
+    @ApiResponse({ status: HttpStatus.OK, type: RefreshTokenResponseDto })
+    async refreshToken(@Req() req: RequestWithUser): Promise<RefreshTokenResponseDto> {
         const user = req.user;
-        const response = await this.authService.refreshToken(user)
+        return await this.authService.refreshToken(user)
     }
 }

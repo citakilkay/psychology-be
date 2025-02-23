@@ -15,7 +15,7 @@ const config = getConfig();
   imports: [
     PassportModule,
     PassportModule.register({ defaultStrategy: 'jwt' }), // #TODO: session: true
-    JwtModule.register({ secret: config.jwt.JWT_SECRET, signOptions: { expiresIn: config.jwt.JWT_EXPIRED_IN_HOURS } }),
+    JwtModule.register({ secret: config.jwt.JWT_SECRET, signOptions: { expiresIn: config.jwt.JWT_EXPIRED_IN_HOURS + 'h' } }),
     TypeOrmModule.forFeature([User, Permission, Role]),
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy, RefreshJwtStrategy /* , RolesGuard #TODO*/],

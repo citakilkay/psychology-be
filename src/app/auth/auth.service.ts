@@ -4,7 +4,7 @@ import { Response } from "express";
 import { User } from "src/database/entities/user.entity";
 import { QueryFailedError, Repository } from "typeorm";
 import { Role } from "src/database/entities";
-import { LoginResponseDto, JwtPayload, RegisterCredentialsDto } from "./dto";
+import { LoginResponseDto, JwtPayload, RegisterCredentialsDto, RefreshTokenResponseDto } from "./dto";
 import { comparePassword, extractConflictColumn, hashPassword } from "src/shared/utils/handlers";
 import { RoleGroup } from "src/shared/enums/role-group.enum";
 import { UserDetailDto } from "../users/dto/response.dto";
@@ -72,13 +72,13 @@ export class AuthService {
         return user; // #TODO return something else (something contains role)
     }
 
-    async validateRefreshToken(userId: string, refreshToken: string) {
+    async validateRefreshToken(userId: string, refreshToken: string): Promise<JwtPayload> {
         const user = await this.userRepository.findOne({ where: { id: userId } });
         if (!user) throw new UnauthorizedException('User not found!');
-        return user; // #TODO: not return user 
+        return { id: user.id, username: user.username }; // #TODO: not return user 
     }
 
-    async refreshToken(refreshPayload: JwtPayload): Promise<LoginResponseDto> {
+    async refreshToken(refreshPayload: JwtPayload): Promise<RefreshTokenResponseDto> {
         const accessToken = await this.generateAccessToken(refreshPayload);
         return { accessToken, expireInHours: config.jwt.JWT_EXPIRED_IN_HOURS, userId: refreshPayload.id };
     }
@@ -88,7 +88,7 @@ export class AuthService {
         return accessToken;
     }
     private async generateRefreshToken(payload: JwtPayload): Promise<string> {
-        const refreshToken = this.jwtService.sign(payload, { secret: config.jwt.JWT_REFRESH_TOKEN_SECRET, expiresIn: config.jwt.JWT_REFRESH_TOKEN_EXPIRED_IN_HOURS })
+        const refreshToken = this.jwtService.sign(payload, { secret: config.jwt.JWT_REFRESH_TOKEN_SECRET, expiresIn: config.jwt.JWT_REFRESH_TOKEN_EXPIRED_IN_HOURS + 'h' })
         return refreshToken;
     }
 
