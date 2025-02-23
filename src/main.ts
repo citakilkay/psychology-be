@@ -5,10 +5,13 @@ import { ConfigService } from '@nestjs/config';
 import 'reflect-metadata';
 import { ValidationPipe } from '@nestjs/common';
 import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { snapshot: true });
   const configService = app.get(ConfigService);
+
+  app.use(cookieParser());
 
   // Set up global validation pipe
   app.useGlobalPipes(new ValidationPipe());

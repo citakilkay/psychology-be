@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { Response } from "express";
 import { User } from "src/database/entities/user.entity";
 import { QueryFailedError, Repository } from "typeorm";
 import { Role } from "src/database/entities";
@@ -43,20 +44,52 @@ export class AuthService {
             throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
         }
     }
-    async login(loginPayload: JwtPayload): Promise<LoginResponseDto> {
-        const accessToken = this.jwtService.sign(loginPayload)
+    async login(loginPayload: JwtPayload, res: Response): Promise<LoginResponseDto> {
+        const accessToken = await this.generateAccessToken(loginPayload)
+        const refreshToken = await this.generateRefreshToken(loginPayload)
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: false,
+            maxAge: config.jwt.JWT_REFRESH_TOKEN_EXPIRED_IN_HOURS * 60 * 60 * 1000
+        })
         return { accessToken, expireInHours: config.jwt.JWT_EXPIRED_IN_HOURS, userId: loginPayload.id }
     }
 
     async validateUser(usernameOrEmailAddress: string, password: string): Promise<JwtPayload> {
         const user = await this.userRepository.findOne({ where: [{ username: usernameOrEmailAddress }, { emailAddress: usernameOrEmailAddress }] });
         if (user && await comparePassword(password, user.password)) {
-            if (!user.isActive) {
+            if (!user.isActive) { // #TODO: isActive ise kismi erisebilir
                 throw new UnauthorizedException('User is not active');
             }
             return { id: user.id, username: user.username };
         }
         throw new HttpException('Please check your login credentials', HttpStatus.UNAUTHORIZED);
+    }
+
+    async validateJwtUser(userId: string): Promise<User> {
+        const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['role'] });
+        if (!user) throw new UnauthorizedException('User not found!');
+        return user; // #TODO return something else (something contains role)
+    }
+
+    async validateRefreshToken(userId: string, refreshToken: string) {
+        const user = await this.userRepository.findOne({ where: { id: userId } });
+        if (!user) throw new UnauthorizedException('User not found!');
+        return user; // #TODO: not return user 
+    }
+
+    async refreshToken(refreshPayload: JwtPayload): Promise<LoginResponseDto> {
+        const accessToken = await this.generateAccessToken(refreshPayload);
+        return { accessToken, expireInHours: config.jwt.JWT_EXPIRED_IN_HOURS, userId: refreshPayload.id };
+    }
+
+    private async generateAccessToken(payload: JwtPayload): Promise<string> {
+        const accessToken = this.jwtService.sign(payload)
+        return accessToken;
+    }
+    private async generateRefreshToken(payload: JwtPayload): Promise<string> {
+        const refreshToken = this.jwtService.sign(payload, { secret: config.jwt.JWT_REFRESH_TOKEN_SECRET, expiresIn: config.jwt.JWT_REFRESH_TOKEN_EXPIRED_IN_HOURS })
+        return refreshToken;
     }
 
     async logout(user: User): Promise<void> {

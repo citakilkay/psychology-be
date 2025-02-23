@@ -6,13 +6,13 @@ import { User } from "src/database/entities/user.entity";
 import { Repository } from "typeorm";
 import { getConfig } from "src/shared/config";
 import { JwtPayload } from "../dto";
+import { AuthService } from "../auth.service";
 
 const config = getConfig();
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
     constructor(
-        @InjectRepository(User)
-        private userRepository: Repository<User>,
+        private authService: AuthService,
     ) {
         super({
             secretOrKey: config.jwt.JWT_SECRET,
@@ -21,15 +21,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     async validate(payload: JwtPayload): Promise<User> {
-        console.log(payload)
-        const user = await this.userRepository.findOne({ where: { id: payload.id } });
+        const user = await this.authService.validateJwtUser(payload.id);
         if (!user) {
             throw new UnauthorizedException('User not found');
         }
 
-        if (!user.isActive) {
-            throw new UnauthorizedException('User is not active');
-        }
+        // if (!user.isActive) { #TODO isActive ise kismi erisebilir
+        //     throw new UnauthorizedException('User is not active');
+        // }
 
         return user;
     }

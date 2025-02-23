@@ -3,6 +3,6 @@ export interface JwtPayload {
     id: string
 }
 
-export interface CustomRequest extends Request {
+export interface RequestWithUser extends Request {
     user: JwtPayload;
 }

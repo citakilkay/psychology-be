@@ -4,21 +4,21 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { User, Permission, Role } from "src/database/entities";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
-import { JwtStrategy, LocalStrategy } from "./strategies"; //#TODO: create a strategy for the jwt
+import { JwtStrategy, LocalStrategy } from "./strategies";
 // import { RolesGuard } from "./guards/roles.guard"; //#TODO: create a guard for the roles
 import { getConfig } from "src/shared/config";
 import { JwtModule } from "@nestjs/jwt";
+import { RefreshJwtStrategy } from "./strategies/refresh.strategy";
 
 const config = getConfig();
 @Module({
   imports: [
     PassportModule,
-    /* #TODO: add the imports for the jwt */
     PassportModule.register({ defaultStrategy: 'jwt' }), // #TODO: session: true
-    JwtModule.register({ secret: config.jwt.JWT_SECRET, signOptions: { expiresIn: '72h' } }),
+    JwtModule.register({ secret: config.jwt.JWT_SECRET, signOptions: { expiresIn: config.jwt.JWT_EXPIRED_IN_HOURS } }),
     TypeOrmModule.forFeature([User, Permission, Role]),
   ],
-  providers: [AuthService, LocalStrategy, JwtStrategy /* , RolesGuard #TODO*/],
+  providers: [AuthService, LocalStrategy, JwtStrategy, RefreshJwtStrategy /* , RolesGuard #TODO*/],
   controllers: [AuthController],
   // exports: [JwtStrategy, PassportModule], // #TODO I don't know if I need this
 })
