@@ -4,5 +4,6 @@ export interface JwtPayload {
 }
 
 export interface RequestWithUser extends Request {
+    cookies: any;
     user: JwtPayload;
 }

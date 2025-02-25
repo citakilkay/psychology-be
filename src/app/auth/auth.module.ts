@@ -23,3 +23,13 @@ const config = getConfig();
   // exports: [JwtStrategy, PassportModule], // #TODO I don't know if I need this
 })
 export class AuthModule { }
+
+// kalan yerden youtube sakura
+// strategy icinde kullanilan functionlar controller icinde kullanilan functionlar ile ayni yerde olması dogru mu? CHATGPT
+// user logout olunca refresh token ve access token invalid hale geldiginden emin ol.
+// implement a login date
+// signout
+// roles guard (youtube)
+// getUser decorator
+// seed service
+// 3 module tamamladiktan sonra test caseler yaz madde madde hepsini yap. Break pointler ile birlikte.

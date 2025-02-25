@@ -28,5 +28,13 @@ export class User extends EntityBase {
     @ManyToOne(() => Role, (role) => role.users, { nullable: false })
     role: Role;
 
+    @Column({ nullable: true })
+    @Exclude()
+    lastLoginDate?: Date;
+
+    @Column({ nullable: true })
+    @Exclude()
+    hashedRefreshToken?: string;
+
     // #TODO: last login date
 }

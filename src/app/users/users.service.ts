@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, ILike, QueryFailedError, Repository } from 'typeorm';
-import { extractConflictColumn, handleSearchConditions, hashPassword } from 'src/shared/utils/handlers';
+import { extractConflictColumn, handleSearchConditions, hashAKey } from 'src/shared/utils/handlers';
 import { plainToInstance } from 'class-transformer';
 import { Role, User } from 'src/database/entities';
 import { CreateUserDto, FilterUserDto, UpdateUserDto } from './dto/payload.dto';
@@ -66,7 +66,7 @@ export class UsersService {
     async create(createUserDto: CreateUserDto): Promise<UserDetailDto> {
 
         const { password, roleId, ...userData } = createUserDto;
-        const hashedPassword = await hashPassword(password)
+        const hashedPassword = await hashAKey(password)
         const role = await this.roleRepository.findOne({ where: { id: roleId } })
         if (!role) {
             throw new HttpException(`Role with id ${roleId} not found`, HttpStatus.NOT_FOUND);

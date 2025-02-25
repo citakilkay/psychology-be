@@ -36,8 +36,10 @@ export class AuthController {
     @Post('refresh-token')
     @ApiOperation({ summary: 'Refresh Token' })
     @ApiResponse({ status: HttpStatus.OK, type: RefreshTokenResponseDto })
-    async refreshToken(@Req() req: RequestWithUser): Promise<RefreshTokenResponseDto> {
+    async refreshToken(@Req() req: RequestWithUser, @Res() res: Response): Promise<RefreshTokenResponseDto> {
         const user = req.user;
-        return await this.authService.refreshToken(user)
+        const response = await this.authService.refreshToken(user, res)
+        res.status(HttpStatus.OK).json(response); // #TEST this one returns a new refresh token in cookies
+        return response;
     }
 }

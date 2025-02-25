@@ -41,7 +41,7 @@ export function getConfig(): Config {
         },
         jwt: {
             JWT_SECRET: mustGetEnv('JWT_SECRET'),
-            JWT_EXPIRED_IN_HOURS: getIntEnv('JWT_EXPIRED_IN_HOURS', 6),
+            JWT_EXPIRED_IN_HOURS: getIntEnv('JWT_EXPIRED_IN_HOURS', 1),
             JWT_REFRESH_TOKEN_SECRET: mustGetEnv('JWT_REFRESH_TOKEN_SECRET'),
             JWT_REFRESH_TOKEN_EXPIRED_IN_HOURS: getIntEnv('JWT_REFRESH_TOKEN_EXPIRED_IN_HOURS', 120)
         },

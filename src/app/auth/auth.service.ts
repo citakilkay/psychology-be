@@ -5,7 +5,7 @@ import { User } from "src/database/entities/user.entity";
 import { QueryFailedError, Repository } from "typeorm";
 import { Role } from "src/database/entities";
 import { LoginResponseDto, JwtPayload, RegisterCredentialsDto, RefreshTokenResponseDto } from "./dto";
-import { comparePassword, extractConflictColumn, hashPassword } from "src/shared/utils/handlers";
+import { compareKey, extractConflictColumn, hashAKey } from "src/shared/utils/handlers";
 import { RoleGroup } from "src/shared/enums/role-group.enum";
 import { UserDetailDto } from "../users/dto/response.dto";
 import { plainToInstance } from "class-transformer";
@@ -25,7 +25,7 @@ export class AuthService {
 
     async register(registerCredentials: RegisterCredentialsDto): Promise<UserDetailDto> {
         const { password, roleId, ...userData } = registerCredentials;
-        const hashedPassword = await hashPassword(password)
+        const hashedPassword = await hashAKey(password)
         const role = await this.roleRepository.findOne({ where: { id: roleId, group: RoleGroup.Client } })
         if (!role) {
             throw new HttpException(`Role with id ${roleId} not found`, HttpStatus.NOT_FOUND);
@@ -49,15 +49,17 @@ export class AuthService {
         const refreshToken = await this.generateRefreshToken(loginPayload)
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: false,
+            secure: false, // #TODO: change to true in production
             maxAge: config.jwt.JWT_REFRESH_TOKEN_EXPIRED_IN_HOURS * 60 * 60 * 1000
         })
+        const hashedRefreshToken = await hashAKey(refreshToken)
+        await this.userRepository.update(loginPayload.id, { hashedRefreshToken })
         return { accessToken, expireInHours: config.jwt.JWT_EXPIRED_IN_HOURS, userId: loginPayload.id }
     }
 
     async validateUser(usernameOrEmailAddress: string, password: string): Promise<JwtPayload> {
         const user = await this.userRepository.findOne({ where: [{ username: usernameOrEmailAddress }, { emailAddress: usernameOrEmailAddress }] });
-        if (user && await comparePassword(password, user.password)) {
+        if (user && await compareKey(user.password, password)) {
             if (!user.isActive) { // #TODO: isActive ise kismi erisebilir
                 throw new UnauthorizedException('User is not active');
             }
@@ -74,12 +76,21 @@ export class AuthService {
 
     async validateRefreshToken(userId: string, refreshToken: string): Promise<JwtPayload> {
         const user = await this.userRepository.findOne({ where: { id: userId } });
-        if (!user) throw new UnauthorizedException('User not found!');
-        return { id: user.id, username: user.username }; // #TODO: not return user 
+        if (user && await compareKey(user.hashedRefreshToken, refreshToken))
+            return { id: user.id, username: user.username }; // #TODO: not return user 
+        throw new UnauthorizedException('User not found or Credentials are invalid!');
     }
 
-    async refreshToken(refreshPayload: JwtPayload): Promise<RefreshTokenResponseDto> {
+    async refreshToken(refreshPayload: JwtPayload, res: Response): Promise<RefreshTokenResponseDto> {
         const accessToken = await this.generateAccessToken(refreshPayload);
+        const refreshToken = await this.generateRefreshToken(refreshPayload);
+        const hashedRefreshToken = await hashAKey(refreshToken)
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: false, // #TODO: change to true in production
+            maxAge: config.jwt.JWT_REFRESH_TOKEN_EXPIRED_IN_HOURS * 60 * 60 * 1000
+        })
+        await this.userRepository.update(refreshPayload.id, { hashedRefreshToken })
         return { accessToken, expireInHours: config.jwt.JWT_EXPIRED_IN_HOURS, userId: refreshPayload.id };
     }
 
