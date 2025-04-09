@@ -1,7 +1,8 @@
-import { Column, Entity, ManyToOne } from "typeorm";
+import { Column, Entity, ManyToOne, OneToOne, UpdateDateColumn } from "typeorm";
 import { EntityBase } from "./common/base.entity";
 import { Role } from "./role.entity";
 import { Exclude } from "class-transformer";
+import { Usership } from "./usership.entity";
 
 @Entity()
 export class User extends EntityBase {
@@ -28,13 +29,10 @@ export class User extends EntityBase {
     @ManyToOne(() => Role, (role) => role.users, { nullable: false })
     role: Role;
 
-    @Column({ nullable: true })
-    @Exclude()
-    lastLoginDate?: Date;
-
-    @Column({ nullable: true })
-    @Exclude()
-    hashedRefreshToken?: string;
-
+    @OneToOne(() => Usership, usership => usership.user, {
+        cascade: true,
+        onDelete: 'CASCADE',
+    })
+    usership: Usership;
     // #TODO: last login date
 }

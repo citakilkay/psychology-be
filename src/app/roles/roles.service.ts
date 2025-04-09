@@ -71,7 +71,6 @@ export class RolesService {
         } catch (err) {
             if (err.code === '23505' && err instanceof QueryFailedError) {
                 const conflictColumn = extractConflictColumn(err.driverError.detail)
-                // duplicate username or emailaddress
                 throw new HttpException(`A role with the given ${conflictColumn} already exists`, HttpStatus.CONFLICT);
             }
 

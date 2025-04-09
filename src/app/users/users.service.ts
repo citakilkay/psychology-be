@@ -44,8 +44,8 @@ export class UsersService {
         }
         const [users, total] = await this.userRepository.findAndCount({
             where: customWhereOptions.length > 0 ? customWhereOptions : {},
-            relations: ['role'],
-            select: { role: { name: true } },
+            relations: ['role', 'usership'],
+            select: { role: { name: true }, usership: { lastLoginDate: true, updatedAt: true } },
             skip,
             take: pageSize,
             order: { [orderBy]: orderDirection },

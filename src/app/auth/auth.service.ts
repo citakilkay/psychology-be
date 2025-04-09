@@ -3,7 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Response } from "express";
 import { User } from "src/database/entities/user.entity";
 import { QueryFailedError, Repository } from "typeorm";
-import { Role } from "src/database/entities";
+import { Role, Usership } from "src/database/entities";
 import { LoginResponseDto, JwtPayload, RegisterCredentialsDto, RefreshTokenResponseDto } from "./dto";
 import { compareKey, extractConflictColumn, hashAKey } from "src/shared/utils/handlers";
 import { RoleGroup } from "src/shared/enums/role-group.enum";
@@ -31,7 +31,10 @@ export class AuthService {
             throw new HttpException(`Role with id ${roleId} not found`, HttpStatus.NOT_FOUND);
         }
         try {
-            const createdUser = await this.userRepository.save({ ...userData, role, password: hashedPassword })
+            const createdUser = await this.userRepository.create({ ...userData, role, password: hashedPassword })
+            const usership = new Usership();
+            usership.user = createdUser;
+            this.userRepository.save(createdUser)
             return plainToInstance(UserDetailDto, createdUser, { excludeExtraneousValues: true });
         } catch (err) {
             if (err.code === '23505' && err instanceof QueryFailedError) {
@@ -53,7 +56,7 @@ export class AuthService {
             maxAge: config.jwt.JWT_REFRESH_TOKEN_EXPIRED_IN_HOURS * 60 * 60 * 1000
         })
         const hashedRefreshToken = await hashAKey(refreshToken)
-        await this.userRepository.update(loginPayload.id, { hashedRefreshToken })
+        await this.userRepository.update(loginPayload.id, { usership: { lastLoginDate: new Date(), hashedRefreshToken } })
         return { accessToken, expireInHours: config.jwt.JWT_EXPIRED_IN_HOURS, userId: loginPayload.id }
     }
 
@@ -75,8 +78,8 @@ export class AuthService {
     }
 
     async validateRefreshToken(userId: string, refreshToken: string): Promise<JwtPayload> {
-        const user = await this.userRepository.findOne({ where: { id: userId } });
-        if (user && await compareKey(user.hashedRefreshToken, refreshToken))
+        const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['usership'], select: { usership: { hashedRefreshToken: true } } });
+        if (user && await compareKey(user.usership.hashedRefreshToken, refreshToken))
             return { id: user.id, username: user.username }; // #TODO: not return user 
         throw new UnauthorizedException('User not found or Credentials are invalid!');
     }
@@ -90,7 +93,7 @@ export class AuthService {
             secure: false, // #TODO: change to true in production
             maxAge: config.jwt.JWT_REFRESH_TOKEN_EXPIRED_IN_HOURS * 60 * 60 * 1000
         })
-        await this.userRepository.update(refreshPayload.id, { hashedRefreshToken })
+        await this.userRepository.update(refreshPayload.id, { usership: { hashedRefreshToken } })
         return { accessToken, expireInHours: config.jwt.JWT_EXPIRED_IN_HOURS, userId: refreshPayload.id };
     }
 
@@ -103,8 +106,10 @@ export class AuthService {
         return refreshToken;
     }
 
-    async logout(user: User): Promise<void> {
-        //#TODO: Implement last login date
-        // await this.userRepository.save(user)
+    async logout(userId: string): Promise<void> {
+        const user = await this.userRepository.findOne({ where: { id: userId } })
+        if (!user) throw new UnauthorizedException('User not found!');
+        await this.userRepository.update(userId, { usership: { hashedRefreshToken: null } }) // #TEST -- repository.update updatedAt'i guncelliyor mu?
+        return;
     }
 }

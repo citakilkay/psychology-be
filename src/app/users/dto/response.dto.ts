@@ -40,6 +40,16 @@ export class UserDto extends ResponseBaseUserDto {
     @ApiProperty({ nullable: true })
     @Expose({ groups: ['userservice'] })
     updatedAt?: Date;
+
+    @ApiProperty({ nullable: true })
+    @Expose({ groups: ['userservice'] })
+    @Transform(({ obj }) => obj.usership.lastLoginDate) // #TEST -- diger endpoinlerde gelmesin role endpointlerinde
+    lastLoginDate?: Date;
+
+    @ApiProperty({ nullable: true })
+    @Expose({ groups: ['userservice'] })
+    @Transform(({ obj }) => obj.usership.updatedAt) // #TEST -- diger endpoinlerde gelmesin role endpointlerinde
+    lastActivityDate?: string; // #TEST niye stringdi burası
 }
 
 export class UserDetailDto extends ResponseBaseUserDto {
@@ -50,4 +60,11 @@ export class UserDetailDto extends ResponseBaseUserDto {
     @Transform(({ obj }) => plainToInstance(RoleDto, obj.role, { excludeExtraneousValues: true }))
     @Expose()
     role: RoleDto;
+    @ApiProperty({ nullable: true })
+    @Transform(({ obj }) => obj.usership.lastLoginDate) // #TEST 
+    lastLoginDate?: Date;
+
+    @ApiProperty({ nullable: true })
+    @Transform(({ obj }) => obj.usership.updatedAt) // #TEST
+    lastActivityDate?: string;
 } 

@@ -6,6 +6,7 @@ import { LocalAuthGuard } from "./guards";
 import { UserDetailDto } from "../users/dto/response.dto";
 import { RefreshAuthGuard } from "./guards/refresh-auth.guard";
 import { Response } from "express";
+import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 
 @Controller('auth')
 @ApiTags('auth')
@@ -41,5 +42,15 @@ export class AuthController {
         const response = await this.authService.refreshToken(user, res)
         res.status(HttpStatus.OK).json(response); // #TEST this one returns a new refresh token in cookies
         return response;
+    }
+
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(JwtAuthGuard)
+    @Post('logout')
+    @ApiOperation({ summary: 'Logout a user' })
+    @ApiResponse({ status: HttpStatus.OK })
+    async logout(@Req() req: RequestWithUser): Promise<void> {
+        const user = req.user;
+        await this.authService.logout(user.id);
     }
 }
