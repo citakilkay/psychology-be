@@ -52,7 +52,7 @@ export class RolesService {
     async create(createRoleDto: CreateRoleDto): Promise<RoleDetailDto> {
         // Step 1: Save the role
         try {
-            const createdRole = await this.roleRepository.save(createRoleDto);
+            const createdRole = await this.roleRepository.save(createRoleDto); 
             // Step 2: Fetch all permissions
             const permissions = await this.permissionRepository.find();
             // Step 3: Map permissions to RolePermission

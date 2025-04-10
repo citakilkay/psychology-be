@@ -4,18 +4,24 @@ import { RoleGroup } from "src/shared/enums/role-group.enum";
 
 const config = getConfig()
 
+type SeedParentPermission = {
+    name: string;
+    description: string;
+    isDefault: boolean;
+    isEditable: boolean;
+}
+
 type SeedPermission = {
     name: string;
     description: string;
     isDefault: boolean;
     isEditable: boolean;
-    parentId?: string;
+    parentName: string;
 }
 
 type SeedRole = {
     name: string;
-    group: string;
-    rolePermissions?: RolePermission[];
+    group: RoleGroup;
 }
 
 type SeedUser = {
@@ -28,7 +34,7 @@ type SeedUser = {
     role?: Role;
 }
 
-export const permissions: SeedPermission[] = [{
+export const parentPermissions: SeedParentPermission[] = [{
     name: "User",
     description: "All User Operations",
     isDefault: false,
@@ -43,70 +49,93 @@ export const permissions: SeedPermission[] = [{
     description: "All Permission Operations",
     isDefault: false,
     isEditable: false
-}, {
+},]
+
+export const permissions: SeedPermission[] = [{
     name: "Create User",
     description: "Create a new User",
     isDefault: false,
-    isEditable: false
+    isEditable: false,
+    parentName: "User"
 }, {
     name: "Update User",
     description: "Create a User",
     isDefault: false,
-    isEditable: false
+    isEditable: false,
+    parentName: "User"
 }, {
     name: "Delete User",
     description: "Delete a User",
     isDefault: false,
-    isEditable: false
+    isEditable: false,
+    parentName: "User"
 }, {
     name: "Get User",
     description: "Get User/Users",
     isDefault: false,
-    isEditable: false
+    isEditable: false,
+    parentName: "User"
 }, {
     name: "Create Role",
     description: "Create a new Role",
     isDefault: false,
-    isEditable: false
+    isEditable: false,
+    parentName: "Role"
 }, {
     name: "Update Role",
     description: "Update a Role",
     isDefault: false,
-    isEditable: false
+    isEditable: false,
+    parentName: "Role"
 }, {
     name: "Delete Role",
     description: "Delete a Role",
     isDefault: false,
-    isEditable: false
+    isEditable: false,
+    parentName: "Role"
 }, {
     name: "Get Role",
     description: "Get Role/Roles",
     isDefault: false,
-    isEditable: false
+    isEditable: false,
+    parentName: "Role"
 }, {
     name: "Create Permission",
     description: "Create a new Permission",
     isDefault: false,
-    isEditable: false
+    isEditable: false,
+    parentName: "Permission"
 }, {
     name: "Update Permission",
     description: "Update a Permission",
     isDefault: false,
-    isEditable: false
+    isEditable: false,
+    parentName: "Permission"
 }, {
     name: "Delete Permission",
     description: "Delete a Permission",
     isDefault: false,
-    isEditable: false
+    isEditable: false,
+    parentName: "Permission"
 }, {
     name: "Get Permission",
     description: "Get Permission/Permissions",
     isDefault: false,
-    isEditable: false
+    isEditable: false,
+    parentName: "Permission"
 }]
 export const roles: SeedRole[] = [{
     name: "SuperAdmin",
     group: RoleGroup.SuperAdmin
+}, {
+    name: "Admin",
+    group: RoleGroup.Admin
+}, {
+    name: "Operator",
+    group: RoleGroup.Operator
+}, {
+    name: "Client",
+    group: RoleGroup.Client
 }]
 
 export const users: SeedUser[] = [{
