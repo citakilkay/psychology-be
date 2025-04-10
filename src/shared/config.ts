@@ -21,10 +21,20 @@ type ServerConfig = {
     PORT: number;
 }
 
+type SeedConfig = {
+    superadmin: SeedUser;
+}
+type SeedUser = {
+    USERNAME: string;
+    PASSWORD: string;
+    EMAIL_ADDRESS: string;
+}
+
 type Config = {
     db: DBConfig;
     jwt: JWTConfig;
     server: ServerConfig;
+    seed: SeedConfig;
 };
 
 export function getConfig(): Config {
@@ -47,6 +57,13 @@ export function getConfig(): Config {
         },
         server: {
             PORT: getIntEnv('PORT', 3000),
+        },
+        seed: {
+            superadmin: {
+                USERNAME: mustGetEnv('SUPERADMIN_USERNAME'),
+                PASSWORD: mustGetEnv('SUPERADMIN_PASSWORD'),
+                EMAIL_ADDRESS: mustGetEnv('SUPERADMIN_EMAIL_ADDRESS')
+            }
         }
     }
 }
