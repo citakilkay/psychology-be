@@ -15,7 +15,7 @@ const synchronize = config.db.SYNCHRONIZE;
 const sslRejectUnauthorized = config.db.SSL_REJECT_UNAUTHORIZED;
 
 @Module({
-  imports: [SeedModule, UsersModule, PermissionsModule, RolesModule, AuthModule, ConfigModule.forRoot({ isGlobal: true }),
+  imports: [SeedModule, UsersModule, PermissionsModule, RolesModule, AuthModule, SeedModule, ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
@@ -31,7 +31,7 @@ const sslRejectUnauthorized = config.db.SSL_REJECT_UNAUTHORIZED;
           rejectUnauthorized: sslRejectUnauthorized,
         }
       }),
-      inject: [ConfigService, SeedService],
+      inject: [ConfigService],
     })]
 })
 export class AppModule implements OnModuleInit {

@@ -6,5 +6,6 @@ import { SeedService } from './seeds.service';
 @Module({
     imports: [TypeOrmModule.forFeature([User, Role, Permission, RolePermission])],
     providers: [SeedService],
+    exports: [SeedService]
 })
 export class SeedModule { }

@@ -20,7 +20,7 @@ const config = getConfig();
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy, RefreshJwtStrategy /* , RolesGuard #TODO*/],
   controllers: [AuthController],
-   exports: [JwtStrategy, PassportModule], // #TODO I don't know if I need this
+  exports: [JwtStrategy, PassportModule], // #TODO I don't know if I need this
 })
 export class AuthModule { }
 

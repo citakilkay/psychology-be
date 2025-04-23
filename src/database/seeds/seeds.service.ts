@@ -8,6 +8,7 @@ import { RoleGroup } from 'src/shared/enums/role-group.enum';
 
 @Injectable()
 export class SeedService {
+    private readonly logger: Logger = new Logger(SeedService.name)
     constructor(
         @InjectRepository(Role)
         private readonly roleRepository: Repository<Role>,
@@ -17,7 +18,6 @@ export class SeedService {
         private readonly permissionRepository: Repository<Permission>,
         @InjectRepository(RolePermission)
         private readonly rolePermissionRepository: Repository<RolePermission>,
-        private readonly logger: Logger = new Logger()
     ) { }
 
     async seed() {
