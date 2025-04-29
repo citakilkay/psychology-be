@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { Permission, Role, RolePermission, User } from '../entities';
 import { parentPermissions, permissions, roles, users } from './seed.data';
 import { hashAKey } from 'src/shared/utils/handlers';
@@ -37,56 +37,72 @@ export class SeedService {
     }
 
     private async createPermissions() {
-        for (const permission of parentPermissions) {
-            const permissionExist = await this.permissionRepository.findOne({ where: { name: permission.name } });
-            if (!permissionExist) {
-                const newPermission = await this.permissionRepository.save(permissionExist)
+        try {
+            for (const permission of parentPermissions) {
+                const permissionExist = await this.permissionRepository.findOne({ where: { name: permission.name, parent: IsNull() } });
+                if (!permissionExist) {
+                    const newPermission = await this.permissionRepository.save(permission)
+                }
             }
-        }
-        for (const permission of permissions) {
-            const permissionExist = await this.permissionRepository.findOne({ where: { name: permission.name } });
-            const parent = await this.permissionRepository.findOne({ where: { parent: { name: permission.parentName } }, select: { parent: { id: true } } })
+            for (const permission of permissions) {
+                const permissionExist = await this.permissionRepository.findOne({ where: { name: permission.name, parent: { name: permission.parentName } } });
+                const parent = await this.permissionRepository.findOne({ where: { name: permission.parentName } })
 
-            if (!permissionExist && parent) {
-                const newPermission = await this.permissionRepository.create(permission)
-                newPermission.parent = parent
-                const createdPermission = await this.permissionRepository.save(newPermission)
+                if (!permissionExist && parent) {
+                    const newPermission = await this.permissionRepository.create(permission)
+                    newPermission.parent = parent
+                    const createdPermission = await this.permissionRepository.save(newPermission)
+                }
             }
+        } catch (error) {
+            this.logger.error('Seeding failed: ', error);
+            throw new InternalServerErrorException('Create Permission seeding failed');
         }
     }
 
     private async createRoles() {
-        for (const role of roles) {
-            const roleExists = await this.roleRepository.findOne({ where: { name: role.name } });
-            if (!roleExists) {
-                const createdRole = await this.roleRepository.save(role);
-                // Step 2: Fetch all permissions
-                const permissions = await this.permissionRepository.find();
-                // Step 3: Map permissions to RolePermission
-                const rolePermissions = permissions.map(permission => {
-                    const rolePermission = new RolePermission();
-                    rolePermission.isActive = [RoleGroup.Admin, RoleGroup.SuperAdmin].includes(role.group) || permission.isDefault;
-                    rolePermission.role = createdRole;
-                    rolePermission.permission = permission;
-                    return rolePermission;
-                });
-                // Step 4: Save rolePermissions
-                await this.rolePermissionRepository.save(rolePermissions);
+        try {
+            for (const role of roles) {
+                const roleExists = await this.roleRepository.findOne({ where: { name: role.name } });
+                if (!roleExists) {
+                    const createdRole = await this.roleRepository.save(role);
+                    // Step 2: Fetch all permissions
+                    const permissions = await this.permissionRepository.find();
+                    // Step 3: Map permissions to RolePermission
+                    const rolePermissions = permissions.map(permission => {
+                        const rolePermission = new RolePermission();
+                        rolePermission.isActive = role.group == RoleGroup.SuperAdmin || permission.isDefault;
+                        rolePermission.role = createdRole;
+                        rolePermission.permission = permission;
+                        return rolePermission;
+                    });
+                    // Step 4: Save rolePermissions
+                    await this.rolePermissionRepository.save(rolePermissions);
+                }
             }
+        } catch (error) {
+            this.logger.error('Seeding failed: ', error);
+            throw new InternalServerErrorException('Create Roles seeding failed');
         }
     }
 
     private async createUsers() {
-        for (const user of users) {
-            const userExists = await this.userRepository.findOne({ where: { username: user.username } });
-            const superAdminRole = await this.roleRepository.findOne({ where: { group: RoleGroup.SuperAdmin } })
-            if (!userExists && superAdminRole) {
-                const hashedPassword = await hashAKey(user.password)
-                user.password = hashedPassword
-                const newUser = await this.userRepository.create(user)
-                newUser.role = superAdminRole
-                await this.userRepository.save(newUser)
+        try {
+            for (const user of users) {
+                const userExists = await this.userRepository.findOne({ where: { username: user.username } });
+                const superAdminRole = await this.roleRepository.findOne({ where: { group: RoleGroup.SuperAdmin } });
+                if (!userExists && superAdminRole) {
+                    const hashedPassword = await hashAKey(user.password)
+                    user.password = hashedPassword
+                    const newUser = await this.userRepository.create(user)
+                    newUser.role = superAdminRole
+                    await this.userRepository.save(newUser)
+                }
             }
+        }
+        catch (error) {
+            this.logger.error('Seeding failed: ', error);
+            throw new InternalServerErrorException('Create User seeding failed');
         }
     }
 }
