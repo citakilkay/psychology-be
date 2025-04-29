@@ -1,8 +1,9 @@
-import { Column, Entity, ManyToOne, OneToOne, UpdateDateColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne, UpdateDateColumn } from "typeorm";
 import { EntityBase } from "./common/base.entity";
 import { Role } from "./role.entity";
 import { Exclude } from "class-transformer";
 import { Usership } from "./usership.entity";
+import { Tenant } from ".";
 
 @Entity()
 export class User extends EntityBase {
@@ -32,6 +33,13 @@ export class User extends EntityBase {
         cascade: true,
         onDelete: 'CASCADE',
     })
+    @JoinColumn()
     usership: Usership;
+
+    @ManyToOne(() => Tenant, (tenant) => tenant.users, {
+        nullable: true, // #TODO business logic ensures it's required unless SuperAdmin
+        // onDelete: 'CASCADE', #TODO - first operators and clients must be deleted first, but admin user won't delete so it shouldn't be Cascade delete
+    })
+    tenant?: Tenant;
     // #TODO: last login date
 }

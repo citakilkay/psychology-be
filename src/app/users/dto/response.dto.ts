@@ -33,6 +33,7 @@ abstract class ResponseBaseUserDto {
 }
 
 export class UserDto extends ResponseBaseUserDto {
+    @ApiProperty()
     @Expose({ groups: ['userservice'] })
     @Transform(({ obj }) => obj.role.name)
     roleName: string;

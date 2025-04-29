@@ -4,11 +4,10 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { User, Permission, Role, Usership } from "src/database/entities";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
-import { JwtStrategy, LocalStrategy } from "./strategies";
+import { JwtStrategy, LocalStrategy, RefreshJwtStrategy } from "./strategies";
 // import { RolesGuard } from "./guards/roles.guard"; //#TODO: create a guard for the roles
 import { getConfig } from "src/shared/config";
 import { JwtModule } from "@nestjs/jwt";
-import { RefreshJwtStrategy } from "./strategies/refresh.strategy";
 
 const config = getConfig();
 @Module({
