@@ -21,9 +21,9 @@ export class Permission extends EntityBase {
     @Index()
     parent?: Permission;
 
-    @OneToMany(() => Permission, permission => permission.parent, { cascade: ['remove'] }) // #TEST -- sikinti cikarsa softremove yap
+    @OneToMany(() => Permission, permission => permission.parent, { cascade: ['remove', 'soft-remove'] }) // #TEST -- sikinti cikarsa softremove yap
     childPermissions: Permission[];
 
-    @OneToMany(() => RolePermission, rolePermission => rolePermission.permission)
+    @OneToMany(() => RolePermission, rolePermission => rolePermission.permission, { cascade: true })
     rolePermissions: RolePermission[];
 }

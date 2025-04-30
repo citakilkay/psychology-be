@@ -30,6 +30,15 @@ abstract class ResponseBaseUserDto {
     @ApiProperty()
     @Expose()
     emailAddress: string;
+
+    @ApiProperty({ nullable: true })
+    @Expose()
+    tenantId?: string;
+
+    @ApiProperty({ nullable: true })
+    @Expose()
+    @Transform(({ obj }) => obj.tenant?.fullBrandName)
+    tenantName?: string;
 }
 
 export class UserDto extends ResponseBaseUserDto {

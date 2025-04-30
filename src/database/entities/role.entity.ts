@@ -12,9 +12,9 @@ export class Role extends EntityBase {
     @Column({ nullable: false, type: "enum", enum: RoleGroup })
     group: RoleGroup;
 
-    @OneToMany(() => RolePermission, (rolePermission) => rolePermission.role)
+    @OneToMany(() => RolePermission, (rolePermission) => rolePermission.role, { cascade: true }) // cascade yapinca updateTime degisiyor mu?
     rolePermissions: RolePermission[];
 
-    @OneToMany(() => User, (user) => user.role)
+    @OneToMany(() => User, (user) => user.role, { cascade: ['soft-remove', 'remove'] })
     users: User[];
 }

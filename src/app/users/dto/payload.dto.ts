@@ -32,6 +32,10 @@ export class CreateUserDto extends PayloadBaseUserDto {
     @IsUUID()
     @ApiProperty()
     roleId: string;
+
+    @IsUUID()
+    @ApiProperty()
+    tenantId: string;
 }
 
 export class UpdateUserDto extends PayloadBaseUserDto {

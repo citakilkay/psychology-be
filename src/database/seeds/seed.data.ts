@@ -49,80 +49,63 @@ export const parentPermissions: SeedParentPermission[] = [{
     description: "All Permission Operations",
     isDefault: false,
     isEditable: false
-},]
+}, {
+    name: "Tenant",
+    description: "All Tenant Operations",
+    isDefault: false,
+    isEditable: false
+},
+
+]
 
 export const permissions: SeedPermission[] = [{
-    name: "Create User",
-    description: "Create a new User",
+    name: "Access User",
+    description: "GET /user Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "User"
 }, {
-    name: "Update User",
-    description: "Create a User",
+    name: "Manage User",
+    description: "POST, PUT, DELETE etc. /user Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "User"
 }, {
-    name: "Delete User",
-    description: "Delete a User",
-    isDefault: false,
-    isEditable: false,
-    parentName: "User"
-}, {
-    name: "Get User",
-    description: "Get User/Users",
-    isDefault: false,
-    isEditable: false,
-    parentName: "User"
-}, {
-    name: "Create Role",
-    description: "Create a new Role",
+    name: "Access Role",
+    description: "GET /role Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "Role"
 }, {
-    name: "Update Role",
-    description: "Update a Role",
+    name: "Manage Role",
+    description: "POST, PUT, DELETE etc. /role Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "Role"
 }, {
-    name: "Delete Role",
-    description: "Delete a Role",
-    isDefault: false,
-    isEditable: false,
-    parentName: "Role"
-}, {
-    name: "Get Role",
-    description: "Get Role/Roles",
-    isDefault: false,
-    isEditable: false,
-    parentName: "Role"
-}, {
-    name: "Create Permission",
-    description: "Create a new Permission",
+    name: "Access Permission",
+    description: "GET /permission Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "Permission"
 }, {
-    name: "Update Permission",
-    description: "Update a Permission",
+    name: "Manage Permission",
+    description: "POST, PUT, DELETE etc. /permission Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "Permission"
 }, {
-    name: "Delete Permission",
-    description: "Delete a Permission",
+    name: "Access Tenant",
+    description: "GET /tenant Endpoints",
     isDefault: false,
     isEditable: false,
-    parentName: "Permission"
+    parentName: "Tenant"
 }, {
-    name: "Get Permission",
-    description: "Get Permission/Permissions",
+    name: "Manage Tenant",
+    description: "POST, PUT, DELETE etc. /tenant Endpoints",
     isDefault: false,
     isEditable: false,
-    parentName: "Permission"
+    parentName: "Tenant"
 }]
 export const roles: SeedRole[] = [{
     name: "SuperAdmin",

@@ -17,9 +17,7 @@ export class Usership {
     @UpdateDateColumn()
     updatedAt?: Date;
 
-    @OneToOne(() => User, user => user.usership, {
-        onDelete: 'CASCADE',
-    })
+    @OneToOne(() => User, user => user.usership)
     user: User;
 
 }

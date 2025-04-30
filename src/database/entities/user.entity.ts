@@ -37,9 +37,9 @@ export class User extends EntityBase {
     usership: Usership;
 
     @ManyToOne(() => Tenant, (tenant) => tenant.users, {
-        nullable: true, // #TODO business logic ensures it's required unless SuperAdmin
-        // onDelete: 'CASCADE', #TODO - first operators and clients must be deleted first, but admin user won't delete so it shouldn't be Cascade delete
-    })
+        nullable: true,
+        onDelete: 'SET NULL',
+      })
     tenant?: Tenant;
     // #TODO: last login date
 }
