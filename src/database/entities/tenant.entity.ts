@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, OneToMany, OneToOne } from "typeorm";
 import { EntityBase } from "./common/base.entity";
 import { User } from ".";
+import { IsEmail, IsOptional, IsPhoneNumber } from "class-validator";
 
 @Entity()
 export class Tenant extends EntityBase {
@@ -25,9 +26,11 @@ export class Tenant extends EntityBase {
 
     @Column({ default: true })
     isActive: boolean;
+
+    // #TODO tenant.setup -- currency falan -profit model falan - kiralama mi comission mu
 }
 
-export type ContactInfo = {
+export class ContactInfo {
     website: string;
     socialMedia?: {
         instagramUsername?: string;
@@ -35,10 +38,14 @@ export type ContactInfo = {
     }
     firstName?: string;
     lastName?: string;
+    @IsOptional()
+    @IsEmail({}, { message: 'Email Address is invalid' })
     emailAddress?: string;
+    @IsOptional()
+    @IsPhoneNumber(null, { message: 'Invalid phone number' })
     phoneNumber?: string;
     address?: {
-        mapLink?: string;
+        mapLink?: string; // #TODO --  long and lat tut, link yerine
         addressinText?: string;
     };
 };

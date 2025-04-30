@@ -89,20 +89,24 @@ export class UsersService {
     async update(id: string, updateUserDto: UpdateUserDto): Promise<UserDetailDto> {
         const userToUpdate = await this.userRepository.findOne({ where: { id } })
         // Merge updateUserDto into userToUpdate
-        const userData = plainToInstance(User, { ...userToUpdate, ...updateUserDto });
-        try {
-            const updatedUser = await this.userRepository.save(userData);
-            return plainToInstance(UserDetailDto, updatedUser, { excludeExtraneousValues: true });
-        } catch (err) {
-            if (err.code === '23505' && err instanceof QueryFailedError) {
-                const conflictColumn = extractConflictColumn(err.driverError.detail)
-                throw new HttpException(`A user with the given ${conflictColumn} already exists`, HttpStatus.CONFLICT);
+
+        if (userToUpdate) {
+            const userData = plainToInstance(User, { ...userToUpdate, ...updateUserDto });
+            try {
+                const updatedUser = await this.userRepository.save(userData);
+                return plainToInstance(UserDetailDto, updatedUser, { excludeExtraneousValues: true });
+            } catch (err) {
+                if (err.code === '23505' && err instanceof QueryFailedError) {
+                    const conflictColumn = extractConflictColumn(err.driverError.detail)
+                    throw new HttpException(`A user with the given ${conflictColumn} already exists`, HttpStatus.CONFLICT);
+                }
+                if (err.status) {
+                    throw new HttpException(err.message, err.status);
+                }
+                throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
             }
-            if (err.status) {
-                throw new HttpException(err.message, err.status);
-            }
-            throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
         }
+        throw new HttpException(`User with id ${id} not found`, HttpStatus.NOT_FOUND);
     }
 
 
