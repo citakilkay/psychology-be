@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { extractConflictColumn, extractReferencedTable, handleSearchConditions } from 'src/shared/utils/handlers';
+import { customizeException, handleSearchConditions } from 'src/shared/utils/handlers';
 import { FindOptionsWhere, In, QueryFailedError, Repository } from 'typeorm';
 import { CreateRoleDto, FilterRoleDto, UpdateRoleDto } from './dto/payload.dto';
 import { RoleDetailDto, RoleDto } from './dto/response.dto';
@@ -52,7 +52,7 @@ export class RolesService {
     async create(createRoleDto: CreateRoleDto): Promise<RoleDetailDto> {
         // Step 1: Save the role
         try {
-            const createdRole = await this.roleRepository.save(createRoleDto); 
+            const createdRole = await this.roleRepository.save(createRoleDto);
             // Step 2: Fetch all permissions
             const permissions = await this.permissionRepository.find();
             // Step 3: Map permissions to RolePermission
@@ -69,15 +69,7 @@ export class RolesService {
             // Step 5: Return the response mapped to RoleDetailDto
             return plainToInstance(RoleDetailDto, createdRole, { excludeExtraneousValues: true });
         } catch (err) {
-            if (err.code === '23505' && err instanceof QueryFailedError) {
-                const conflictColumn = extractConflictColumn(err.driverError.detail)
-                throw new HttpException(`A role with the given ${conflictColumn} already exists`, HttpStatus.CONFLICT);
-            }
-
-            if (err.status) {
-                throw new HttpException(err.message, err.status);
-            }
-            throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
+            return customizeException(err, { entity: "Role" })
         }
     }
 
@@ -100,15 +92,7 @@ export class RolesService {
                 const updatedRole = await this.roleRepository.save(roleData);
                 return plainToInstance(RoleDetailDto, updatedRole, { excludeExtraneousValues: true });
             } catch (err) {
-                if (err.code === '23505' && err instanceof QueryFailedError) {
-                    const conflictColumn = extractConflictColumn(err.driverError.detail)
-                    // duplicate username or emailaddress
-                    throw new HttpException(`A role with the given ${conflictColumn} already exists`, HttpStatus.CONFLICT);
-                }
-                if (err.status) {
-                    throw new HttpException(err.message, err.status);
-                }
-                throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
+                return customizeException(err, { entity: "Role", id })
             }
         }
         throw new HttpException(`Role with id ${id} not found`, HttpStatus.NOT_FOUND);
@@ -121,15 +105,8 @@ export class RolesService {
         }
         try {
             await this.roleRepository.remove(deleteToRole)
-            return
         } catch (err) {
-            if (err.code === '23503' && err instanceof QueryFailedError) {
-                const conflictColumn = extractReferencedTable(err.driverError.detail)
-                throw new HttpException(`Role with id ${id} is associated with a user`, HttpStatus.CONFLICT);
-            } if (err.status) {
-                throw new HttpException(err.message, err.status);
-            }
-            throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
+            return customizeException(err, { entity: "Role", id })
         }
     }
 }

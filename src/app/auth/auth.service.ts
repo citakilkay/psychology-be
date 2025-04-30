@@ -5,7 +5,7 @@ import { User } from "src/database/entities/user.entity";
 import { QueryFailedError, Repository } from "typeorm";
 import { Role, Usership } from "src/database/entities";
 import { LoginResponseDto, JwtPayload, RegisterCredentialsDto, RefreshTokenResponseDto } from "./dto";
-import { compareKey, extractConflictColumn, hashAKey } from "src/shared/utils/handlers";
+import { compareKey, customizeException, hashAKey } from "src/shared/utils/handlers";
 import { RoleGroup } from "src/shared/enums/role-group.enum";
 import { UserDetailDto } from "../users/dto/response.dto";
 import { plainToInstance } from "class-transformer";
@@ -37,14 +37,7 @@ export class AuthService {
             this.userRepository.save(createdUser)
             return plainToInstance(UserDetailDto, createdUser, { excludeExtraneousValues: true });
         } catch (err) {
-            if (err.code === '23505' && err instanceof QueryFailedError) {
-                const conflictColumn = extractConflictColumn(err.driverError.detail)
-                throw new HttpException(`A user with the given value ${conflictColumn} already exists`, HttpStatus.CONFLICT);
-            }
-            if (err.status) {
-                throw new HttpException(err.message, err.status);
-            }
-            throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
+            return customizeException(err, { entity: "User" })
         }
     }
     async login(loginPayload: JwtPayload, res: Response): Promise<LoginResponseDto> {

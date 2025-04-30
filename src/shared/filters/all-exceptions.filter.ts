@@ -27,7 +27,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
         response.status(status).json(errorResponse);
     }
 
-
     private logError = (errorResponse: CustomHttpExceptionResponse, request: any, exception: unknown): void => {
         const { statusCode, error } = errorResponse;
         const { method, url } = request;

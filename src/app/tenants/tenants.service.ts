@@ -4,7 +4,7 @@ import { Tenant, User } from "src/database/entities";
 import { FindOptionsWhere, QueryFailedError, Repository } from "typeorm";
 import { CreateTenantDto, FilterTenantDto, UpdateTenantDto } from "./dto/payload.dto";
 import { TenantDetailDto, TenantDto } from "./dto/response.dto";
-import { extractConflictColumn, handleSearchConditions } from "src/shared/utils/handlers";
+import { customizeException, handleSearchConditions } from "src/shared/utils/handlers";
 import { plainToInstance } from "class-transformer";
 import { RoleGroup } from "src/shared/enums/role-group.enum";
 
@@ -61,14 +61,7 @@ export class TenantsService {
             const createdTenant = await this.tenantRepository.save({ ...createTenantDto, admin: tenantAdmin }) // #TEST -- tum bilgiler kayit oluyor mu
             return plainToInstance(TenantDetailDto, createdTenant, { excludeExtraneousValues: true });
         } catch (err) {
-            if (err.code === '23505' && err instanceof QueryFailedError) {
-                const conflictColumn = extractConflictColumn(err.driverError.detail)
-                throw new HttpException(`A tenant with the given ${conflictColumn} already exists`, HttpStatus.CONFLICT);
-            }
-            if (err.status) {
-                throw new HttpException(err.message, err.status);
-            }
-            throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
+            return customizeException(err, { entity: "Tenant" })
         }
     }
 
@@ -85,14 +78,7 @@ export class TenantsService {
                 const updatedTenant = await this.tenantRepository.save(tenant);
                 return plainToInstance(TenantDetailDto, updatedTenant, { excludeExtraneousValues: true });
             } catch (err) {
-                if (err.code === '23505' && err instanceof QueryFailedError) {
-                    const conflictColumn = extractConflictColumn(err.driverError.detail)
-                    throw new HttpException(`A tenant with the given ${conflictColumn} already exists`, HttpStatus.CONFLICT);
-                }
-                if (err.status) {
-                    throw new HttpException(err.message, err.status);
-                }
-                throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
+                return customizeException(err, { entity: "Tenant", id })
             }
         }
         throw new HttpException(`Tenant with id ${id} not found`, HttpStatus.NOT_FOUND);

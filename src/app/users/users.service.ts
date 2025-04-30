@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, ILike, QueryFailedError, Repository } from 'typeorm';
-import { extractConflictColumn, handleSearchConditions, hashAKey } from 'src/shared/utils/handlers';
+import { customizeException, handleSearchConditions, hashAKey } from 'src/shared/utils/handlers';
 import { plainToInstance } from 'class-transformer';
 import { Role, User, Usership } from 'src/database/entities';
 import { CreateUserDto, FilterUserDto, UpdateUserDto } from './dto/payload.dto';
@@ -75,14 +75,7 @@ export class UsersService {
             const createdUser = await this.userRepository.save({ ...userData, role, password: hashedPassword }) // #TEST usership create ediliyor mu? eger oyleyse new Usershipleri kaldir diger yerlerden.
             return plainToInstance(UserDetailDto, createdUser, { excludeExtraneousValues: true });
         } catch (err) {
-            if (err.code === '23505' && err instanceof QueryFailedError) {
-                const conflictColumn = extractConflictColumn(err.driverError.detail)
-                throw new HttpException(`A user with the given value ${conflictColumn} already exists`, HttpStatus.CONFLICT);
-            }
-            if (err.status) {
-                throw new HttpException(err.message, err.status);
-            }
-            throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
+            return customizeException(err, { entity: "User" })
         }
     }
 
@@ -96,14 +89,7 @@ export class UsersService {
                 const updatedUser = await this.userRepository.save(userData);
                 return plainToInstance(UserDetailDto, updatedUser, { excludeExtraneousValues: true });
             } catch (err) {
-                if (err.code === '23505' && err instanceof QueryFailedError) {
-                    const conflictColumn = extractConflictColumn(err.driverError.detail)
-                    throw new HttpException(`A user with the given ${conflictColumn} already exists`, HttpStatus.CONFLICT);
-                }
-                if (err.status) {
-                    throw new HttpException(err.message, err.status);
-                }
-                throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR)
+                return customizeException(err, { entity: "User", id })
             }
         }
         throw new HttpException(`User with id ${id} not found`, HttpStatus.NOT_FOUND);

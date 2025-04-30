@@ -71,7 +71,7 @@ export class SeedService {
                     // Step 3: Map permissions to RolePermission
                     const rolePermissions = permissions.map(permission => {
                         const rolePermission = new RolePermission();
-                        rolePermission.isActive = role.group == RoleGroup.SuperAdmin || permission.isDefault;
+                        rolePermission.isActive = (role.group == RoleGroup.SuperAdmin) || permission.isDefault;
                         rolePermission.role = createdRole;
                         rolePermission.permission = permission;
                         return rolePermission;
