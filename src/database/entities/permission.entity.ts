@@ -17,11 +17,11 @@ export class Permission extends EntityBase {
     @Column({ default: true })
     isEditable: boolean;
 
-    @ManyToOne(() => Permission, (permission) => permission.childPermissions, { nullable: true, onDelete: 'CASCADE' })
+    @ManyToOne(() => Permission, (permission) => permission.childPermissions, { nullable: true })
     @Index()
     parent?: Permission;
 
-    @OneToMany(() => Permission, permission => permission.parent, { cascade: ['remove', 'soft-remove'] }) // #TEST -- sikinti cikarsa softremove yap
+    @OneToMany(() => Permission, permission => permission.parent, { cascade: true }) // #TEST -- sikinti cikarsa softremove yap
     childPermissions: Permission[];
 
     @OneToMany(() => RolePermission, rolePermission => rolePermission.permission, { cascade: true })

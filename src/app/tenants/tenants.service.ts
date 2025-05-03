@@ -92,7 +92,7 @@ export class TenantsService {
         const usersofTenant = await this.userRepository.find({ where: { tenant: { id } }, select: { role: { group: true } } })
         const usersWillbeDelete = usersofTenant.filter(user => RoleGroup.Admin != user.role.group)
         const usersWillbeInActive = usersofTenant.filter(user => RoleGroup.Admin == user.role.group)
-        if (usersWillbeDelete.length) {
+        if (usersofTenant) {
             await this.userRepository.remove(usersWillbeDelete)
             usersWillbeInActive.forEach(user => { user.isActive = false })
             await this.userRepository.save(usersWillbeInActive)

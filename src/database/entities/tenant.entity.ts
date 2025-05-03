@@ -14,10 +14,10 @@ export class Tenant extends EntityBase {
     @Column({ unique: true, nullable: false })
     tenantUrlTag: string;
 
-    @OneToMany(() => User, (user) => user.tenant)
+    @OneToMany(() => User, (user) => user.tenant, { cascade: ['insert', 'update', 'recover'] })
     users: User[];
 
-    @OneToOne(() => User, { cascade: true, onDelete: 'SET NULL', nullable: true })
+    @OneToOne(() => User, { cascade: true, onDelete: 'RESTRICT', nullable: true }) // #TEST -- tenant'in default adminini silmeden once default admine baska bir admini ata
     @JoinColumn() // This makes it a FK in the Tenant table
     admin?: User;
 

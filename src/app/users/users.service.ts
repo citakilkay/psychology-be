@@ -102,13 +102,17 @@ export class UsersService {
         throw new HttpException(`User with id ${id} not found`, HttpStatus.NOT_FOUND);
     }
 
-
     async delete(id: string): Promise<void> {
-        const deleteToUser = await this.userRepository.findOne({ where: { id }, select: { role: { group: true }, tenant: { isActive: true, id: true, name: true } } })
-        // #TODO -- getUser'i yaptiktan sonra-- active olan ve softremoved olmamis bir tenant'in admini eger son admin ise, exception firlat.
-        // 'The last admin of the tenant cannot be deleted'
+        const deleteToUser = await this.userRepository.findOne({ where: { id }, select: { role: { group: true }, tenant: { isActive: true, id: true, name: true, admin: { id: true } } } })
         if (!deleteToUser) {
             throw new HttpException(`User with id ${id} not found`, HttpStatus.NOT_FOUND);
+        }
+        const isDefaultTenantAdmin = deleteToUser.tenant?.admin?.id === id
+        if (isDefaultTenantAdmin) {
+            throw new HttpException(
+                `The user is the default admin of the active tenant "${deleteToUser.tenant?.name}" and cannot be deleted.`,
+                HttpStatus.FORBIDDEN,
+            );
         }
         await this.userRepository.softRemove(deleteToUser)
         return

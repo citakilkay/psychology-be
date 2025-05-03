@@ -29,17 +29,14 @@ export class User extends EntityBase {
     @ManyToOne(() => Role, (role) => role.users, { nullable: false })
     role: Role;
 
-    @OneToOne(() => Usership, usership => usership.user, {
-        cascade: true,
-        onDelete: 'CASCADE',
-    })
+    @OneToOne(() => Usership, usership => usership.user, { cascade: true })
     @JoinColumn()
     usership: Usership;
 
     @ManyToOne(() => Tenant, (tenant) => tenant.users, {
         nullable: true,
         onDelete: 'SET NULL',
-      })
+    })
     tenant?: Tenant;
     // #TODO: last login date
 }
