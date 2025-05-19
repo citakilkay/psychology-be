@@ -1,25 +1,31 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { TenantsService } from "./tenants.service";
 import { CreateTenantDto, FilterTenantDto, UpdateTenantDto } from "./dto/payload.dto";
 import { TenantDetailDto, TenantDto } from "./dto/response.dto";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { PermissionGuard } from "../auth/guards";
+import { AppPermission } from "src/shared/enums";
+import { RequirePermissions } from "src/shared/decorators";
 
 @ApiTags('tenants')
-@Controller('tenants')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, PermissionGuard)
+@RequirePermissions(AppPermission.TenantDefault)
+@Controller('tenants')
 export class TenantsController {
-    constructor(private tenantsService: TenantsService) { }
+    constructor(private readonly tenantsService: TenantsService) { }
 
+    @RequirePermissions(AppPermission.TenantRead)
     @HttpCode(HttpStatus.PARTIAL_CONTENT)
     @Get()
     @ApiOperation({ summary: 'Get All Tenant' })
     @ApiResponse({ status: HttpStatus.PARTIAL_CONTENT })
-    // @UseGuards(RolesGuard)
-    // @Roles(Role.Admin, Role.SuperAdmin)
     async getAll(@Query() filterTenantDto: FilterTenantDto, /*@GetUser() user */): Promise<[TenantDto[], number]> {
         return await this.tenantsService.getAll(filterTenantDto /*,user */)
     }
 
+    @RequirePermissions(AppPermission.TenantRead)
     @Get('/:id')
     @ApiOperation({ summary: 'Get Tenant by Id' })
     @ApiResponse({ status: HttpStatus.OK })
@@ -27,6 +33,7 @@ export class TenantsController {
         return await this.tenantsService.get(id)
     }
 
+    @RequirePermissions(AppPermission.TenantWrite)
     @Post()
     @ApiOperation({ summary: 'Create a Tenant' })
     @ApiResponse({ status: HttpStatus.CREATED })
@@ -34,6 +41,7 @@ export class TenantsController {
         return await this.tenantsService.create(createTenantDto)
     }
 
+    @RequirePermissions(AppPermission.TenantWrite)
     @HttpCode(HttpStatus.OK)
     @Put('/:id')
     @ApiOperation({ summary: 'Update a Tenant' })
@@ -42,6 +50,7 @@ export class TenantsController {
         return await this.tenantsService.update(id, updateTenantDto)
     }
 
+    @RequirePermissions(AppPermission.TenantWrite)
     @HttpCode(HttpStatus.NO_CONTENT)
     @Delete('/:id')
     @ApiOperation({ summary: 'Delete a Tenant' })

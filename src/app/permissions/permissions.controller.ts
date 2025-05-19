@@ -5,59 +5,54 @@ import { CreatePermissionDto, UpdatePermissionDto } from './dto/payload.dto';
 import { PermissionDetailDto, PermissionDto } from './dto/response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AppPermission } from 'src/shared/enums';
-import { Permissions } from 'src/shared/decorators/permissions.decorator';
+import { RequirePermissions } from 'src/shared/decorators';
 import { PermissionGuard } from '../auth/guards';
 
-@UseGuards(JwtAuthGuard)
-@Permissions(AppPermission.PermissionDefault)
-@UseGuards(PermissionGuard)
 @ApiTags('permissions')
-@Controller('permissions')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, PermissionGuard)
+@RequirePermissions(AppPermission.PermissionDefault)
+@Controller('permissions')
 export class PermissionsController {
-    constructor(private permissionService: PermissionsService) { }
-    @Permissions(AppPermission.PermissionRead)
-    @UseGuards(PermissionGuard)
+    constructor(private readonly permissionService: PermissionsService) { }
+    @RequirePermissions(AppPermission.PermissionRead)
     @Get()
     @ApiOperation({ summary: 'Get All Root Permissions' })
-    @ApiResponse({ status: HttpStatus.OK })
+    @ApiResponse({ status: HttpStatus.PARTIAL_CONTENT })
     async getAll( /*@GetUser() user */): Promise<[PermissionDto[], number]> {
-        return await this.permissionService.getAllParentPermissions(/*,user */)
+        return this.permissionService.getAllParentPermissions(/*,user */)
     }
 
-    @Permissions(AppPermission.PermissionRead)
-    @UseGuards(PermissionGuard)
+    @RequirePermissions(AppPermission.PermissionRead)
     @Get('/:id')
     @ApiOperation({ summary: 'Get Permission by Id' })
     @ApiResponse({ status: HttpStatus.OK })
+
     async get(@Param('id') id: string): Promise<PermissionDetailDto> {
-        return await this.permissionService.get(id)
+        return this.permissionService.get(id)
     }
 
-    @Permissions(AppPermission.PermissionWrite)
-    @UseGuards(PermissionGuard)
+    @RequirePermissions(AppPermission.PermissionWrite)
     @Post()
     @ApiOperation({ summary: 'Create a Permission' })
     @ApiResponse({ status: HttpStatus.CREATED })
     async create(@Body() createPermissionDto: CreatePermissionDto): Promise<PermissionDetailDto> {
-        return await this.permissionService.create(createPermissionDto)
+        return this.permissionService.create(createPermissionDto)
     }
 
-    @Permissions(AppPermission.PermissionWrite)
-    @UseGuards(PermissionGuard)
+    @RequirePermissions(AppPermission.PermissionWrite)
     @Put('/:id')
     @ApiOperation({ summary: 'Update a Permission' })
     @ApiResponse({ status: HttpStatus.OK })
     async update(@Param('id') id: string, @Body() updatePermissionDto: UpdatePermissionDto): Promise<PermissionDetailDto> {
-        return await this.permissionService.update(id, updatePermissionDto)
+        return this.permissionService.update(id, updatePermissionDto)
     }
 
-    @Permissions(AppPermission.PermissionWrite)
-    @UseGuards(PermissionGuard)
+    @RequirePermissions(AppPermission.PermissionWrite)
     @Delete('/:id')
-    @ApiOperation({ summary: 'Delete a Role' })
+    @ApiOperation({ summary: 'Delete a Permission' })
     @ApiResponse({ status: HttpStatus.NO_CONTENT })
     async delete(@Param('id') id: string): Promise<void> {
-        return await this.permissionService.delete(id)
+        return this.permissionService.delete(id)
     }
 }

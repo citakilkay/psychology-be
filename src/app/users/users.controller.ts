@@ -4,14 +4,19 @@ import { UsersService } from './users.service';
 import { CreateUserDto, FilterUserDto, UpdateUserDto } from './dto/payload.dto';
 import { UserDetailDto, UserDto } from './dto/response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RequirePermissions } from 'src/shared/decorators';
+import { AppPermission } from 'src/shared/enums';
+import { PermissionGuard } from '../auth/guards';
 
 @ApiTags('users')
-@Controller('users')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionGuard)
+@RequirePermissions(AppPermission.UserDefault)
+@Controller('users')
 export class UsersController {
-    constructor(private userService: UsersService) { }
+    constructor(private readonly userService: UsersService) { }
 
+    @RequirePermissions(AppPermission.UserRead)
     @HttpCode(HttpStatus.PARTIAL_CONTENT)
     @Get()
     @ApiOperation({ summary: 'Get All User' })
@@ -22,6 +27,7 @@ export class UsersController {
         return await this.userService.getAll(filterUserDto /*,user */)
     }
 
+    @RequirePermissions(AppPermission.UserRead)
     @Get('/:id')
     @ApiOperation({ summary: 'Get User by Id' })
     @ApiResponse({ status: HttpStatus.OK })
@@ -29,6 +35,7 @@ export class UsersController {
         return await this.userService.get(id)
     }
 
+    @RequirePermissions(AppPermission.UserWrite)
     @Post()
     @ApiOperation({ summary: 'Create a User' })
     @ApiResponse({ status: HttpStatus.CREATED })
@@ -36,6 +43,7 @@ export class UsersController {
         return await this.userService.create(createUserDto)
     }
 
+    @RequirePermissions(AppPermission.UserWrite)
     @HttpCode(HttpStatus.OK)
     @Put('/:id')
     @ApiOperation({ summary: 'Update a User' })
@@ -43,6 +51,8 @@ export class UsersController {
     async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<UserDetailDto> {
         return await this.userService.update(id, updateUserDto)
     }
+
+    @RequirePermissions(AppPermission.UserWrite)
     @HttpCode(HttpStatus.NO_CONTENT)
     @Delete('/:id')
     @ApiOperation({ summary: 'Delete a User' })
