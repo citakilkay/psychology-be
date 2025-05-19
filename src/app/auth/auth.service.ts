@@ -61,7 +61,7 @@ export class AuthService {
         if (user && await compareKey(user.password, password)) {
             const permissions = user.role.rolePermissions
                 .filter(rolePermission => rolePermission.isActive)
-                .map(rolePermission => rolePermission.permission.parent.name + ':' + rolePermission.permission.name)
+                .map(rolePermission => rolePermission.permission.getAppPermission())
 
             return { id: user.id, isActive: user.isActive, tenantId: user.tenant?.id, roleGroup: user.role.group, permissions };
         }
@@ -85,7 +85,7 @@ export class AuthService {
         if (user && await compareKey(user.usership.hashedRefreshToken, refreshToken)) {
             const permissions = user.role.rolePermissions
                 .filter(rolePermission => rolePermission.isActive)
-                .map(rolePermission => rolePermission.permission.parent.name + ':' + rolePermission.permission.name)
+                .map(rolePermission => rolePermission.permission.getAppPermission())
             return { id: user.id, isActive: user.isActive, tenantId: user.tenant?.id, roleGroup: user.role.group, permissions };
         }
         throw new UnauthorizedException('User not found or Credentials are invalid!');

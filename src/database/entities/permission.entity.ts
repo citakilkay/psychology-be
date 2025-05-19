@@ -26,4 +26,9 @@ export class Permission extends EntityBase {
 
     @OneToMany(() => RolePermission, rolePermission => rolePermission.permission, { cascade: true })
     rolePermissions: RolePermission[];
+
+    getAppPermission(): string {
+        const parentName = this.parent?.name;
+        return parentName ? `${parentName}:${this.name}` : `${this.name}:Default`;
+    }
 }
