@@ -1,11 +1,12 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { RolesService } from './roles.service';
 import { CreateRoleDto, FilterRoleDto, UpdateRoleDto } from './dto/payload.dto';
 import { RoleDetailDto, RoleDto } from './dto/response.dto';
 
 @ApiTags('roles')
 @Controller('roles')
+@ApiBearerAuth()
 export class RolesController {
     constructor(private roleService: RolesService) { }
     @HttpCode(HttpStatus.PARTIAL_CONTENT)

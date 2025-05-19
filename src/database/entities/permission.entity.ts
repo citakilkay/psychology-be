@@ -5,7 +5,7 @@ import { RolePermission } from "./role-permission.entity";
 @Entity()
 @Unique('unique_name_within_parent', ['name', 'parent'])
 export class Permission extends EntityBase {
-    @Column({ nullable: false, unique: true })
+    @Column({ nullable: false })
     name: string;
 
     @Column({ nullable: true })

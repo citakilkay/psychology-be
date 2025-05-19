@@ -1,11 +1,12 @@
 import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PermissionsService } from './permissions.service';
 import { CreatePermissionDto, UpdatePermissionDto } from './dto/payload.dto';
 import { PermissionDetailDto, PermissionDto } from './dto/response.dto';
 
 @ApiTags('permissions')
 @Controller('permissions')
+@ApiBearerAuth()
 export class PermissionsController {
     constructor(private permissionService: PermissionsService) { }
     @Get()

@@ -1,9 +1,7 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
-import { InjectRepository } from "@nestjs/typeorm";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { User } from "src/database/entities/user.entity";
-import { Repository } from "typeorm";
 import { getConfig } from "src/shared/config";
 import { JwtPayload } from "../dto";
 import { AuthService } from "../auth.service";
@@ -30,6 +28,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         //     throw new UnauthorizedException('User is not active');
         // }
 
-        return user;
+        return user; // #TEST burasi request.user mi oluyor? Ve diger strategy'lerin dondurdugu de oluyor mu? Eger oluyorsa hepsini JwtPayload seklinde dondur.
     }
 }

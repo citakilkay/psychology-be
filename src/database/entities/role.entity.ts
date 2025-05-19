@@ -1,6 +1,6 @@
 import { Column, Entity, OneToMany } from "typeorm";
 import { EntityBase } from "./common/base.entity";
-import { RoleGroup } from "src/shared/enums/role-group.enum";
+import { RoleGroup } from "src/shared/enums";
 import { User } from "./user.entity";
 import { RolePermission } from ".";
 

@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { RoleGroup } from "src/shared/enums/role-group.enum";
+import { RoleGroup } from "src/shared/enums";
 import { RolePermission } from "src/database/entities";
 import { Expose, plainToInstance, Transform } from 'class-transformer';
 import { UserDto } from "src/app/users/dto/response.dto";

@@ -6,7 +6,7 @@ import { CreateTenantDto, FilterTenantDto, UpdateTenantDto } from "./dto/payload
 import { TenantDetailDto, TenantDto } from "./dto/response.dto";
 import { customizeException, handleSearchConditions } from "src/shared/utils/handlers";
 import { plainToInstance } from "class-transformer";
-import { RoleGroup } from "src/shared/enums/role-group.enum";
+import { RoleGroup } from "src/shared/enums";
 
 @Injectable()
 export class TenantsService {

@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsArray, IsUUID } from "class-validator";
-import { RoleGroup } from "src/shared/enums/role-group.enum";
+import { RoleGroup } from "src/shared/enums";
 import { Role } from "src/database/entities";
 import { IFilterDto } from "src/shared/utils/filter-dto.interface";
 
@@ -12,7 +12,7 @@ abstract class PayloadBaseRoleDto {
     group: RoleGroup;
 }
 
-export class CreateRoleDto extends PayloadBaseRoleDto {}
+export class CreateRoleDto extends PayloadBaseRoleDto { }
 
 export class UpdateRoleDto extends PayloadBaseRoleDto {
     @ApiProperty({ type: [String], description: 'Array of permission UUIDs' })

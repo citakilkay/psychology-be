@@ -1,6 +1,6 @@
-import { Role, RolePermission } from "src/database/entities";
+import { Role } from "src/database/entities";
 import { getConfig } from "src/shared/config";
-import { RoleGroup } from "src/shared/enums/role-group.enum";
+import { AppPermission, RoleGroup } from "src/shared/enums";
 
 const config = getConfig()
 
@@ -54,54 +54,52 @@ export const parentPermissions: SeedParentPermission[] = [{
     description: "All Tenant Operations",
     isDefault: false,
     isEditable: false
-},
-
-]
+}]
 
 export const permissions: SeedPermission[] = [{
-    name: "Access User",
+    name: AppPermission.UserRead,
     description: "GET /user Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "User"
 }, {
-    name: "Manage User",
+    name: AppPermission.UserWrite,
     description: "POST, PUT, DELETE etc. /user Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "User"
 }, {
-    name: "Access Role",
+    name: AppPermission.RoleRead,
     description: "GET /role Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "Role"
 }, {
-    name: "Manage Role",
+    name: AppPermission.RoleWrite,
     description: "POST, PUT, DELETE etc. /role Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "Role"
 }, {
-    name: "Access Permission",
+    name: AppPermission.PermissionRead,
     description: "GET /permission Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "Permission"
 }, {
-    name: "Manage Permission",
+    name: AppPermission.PermissionWrite,
     description: "POST, PUT, DELETE etc. /permission Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "Permission"
 }, {
-    name: "Access Tenant",
+    name: AppPermission.TenantRead,
     description: "GET /tenant Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "Tenant"
 }, {
-    name: "Manage Tenant",
+    name: AppPermission.TenantWrite,
     description: "POST, PUT, DELETE etc. /tenant Endpoints",
     isDefault: false,
     isEditable: false,

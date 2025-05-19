@@ -3,10 +3,10 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Response } from "express";
 import { User } from "src/database/entities/user.entity";
 import { QueryFailedError, Repository } from "typeorm";
-import { Role, Usership } from "src/database/entities";
+import { Role, RolePermission, Usership } from "src/database/entities";
 import { LoginResponseDto, JwtPayload, RegisterCredentialsDto, RefreshTokenResponseDto } from "./dto";
 import { compareKey, customizeException, hashAKey } from "src/shared/utils/handlers";
-import { RoleGroup } from "src/shared/enums/role-group.enum";
+import { RoleGroup } from "src/shared/enums";
 import { UserDetailDto } from "../users/dto/response.dto";
 import { plainToInstance } from "class-transformer";
 import { JwtService } from "@nestjs/jwt";
@@ -33,7 +33,7 @@ export class AuthService {
         try {
             const createdUser = await this.userRepository.create({ ...userData, role, password: hashedPassword })
             const usership = new Usership();
-            usership.user = createdUser;
+            createdUser.usership = usership;
             this.userRepository.save(createdUser)
             return plainToInstance(UserDetailDto, createdUser, { excludeExtraneousValues: true });
         } catch (err) {
@@ -54,26 +54,40 @@ export class AuthService {
     }
 
     async validateUser(usernameOrEmailAddress: string, password: string): Promise<JwtPayload> {
-        const user = await this.userRepository.findOne({ where: [{ username: usernameOrEmailAddress }, { emailAddress: usernameOrEmailAddress }] });
+        const user = await this.userRepository.findOne({
+            where: [{ username: usernameOrEmailAddress }, { emailAddress: usernameOrEmailAddress }],
+            select: { tenant: { id: true }, role: { group: true, rolePermissions: { permission: { name: true, parent: { name: true } }, isActive: true } } }
+        });
         if (user && await compareKey(user.password, password)) {
-            if (!user.isActive) { // #TODO: isActive ise kismi erisebilir
-                throw new UnauthorizedException('User is not active');
-            }
-            return { id: user.id, username: user.username };
+            const permissions = user.role.rolePermissions
+                .filter(rolePermission => rolePermission.isActive)
+                .map(rolePermission => rolePermission.permission.parent.name + ':' + rolePermission.permission.name)
+
+            return { id: user.id, isActive: user.isActive, tenantId: user.tenant?.id, roleGroup: user.role.group, permissions };
         }
         throw new HttpException('Please check your login credentials', HttpStatus.UNAUTHORIZED);
     }
 
     async validateJwtUser(userId: string): Promise<User> {
-        const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['role'] });
+        const user = await this.userRepository.findOne({
+            where: { id: userId },
+            select: { tenant: { id: true }, role: { group: true, rolePermissions: { permission: { name: true }, isActive: true } } }
+        });
         if (!user) throw new UnauthorizedException('User not found!');
-        return user; // #TODO return something else (something contains role)
+        return user;
     }
 
     async validateRefreshToken(userId: string, refreshToken: string): Promise<JwtPayload> {
-        const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['usership'], select: { usership: { hashedRefreshToken: true } } });
-        if (user && await compareKey(user.usership.hashedRefreshToken, refreshToken))
-            return { id: user.id, username: user.username }; // #TODO: not return user 
+        const user = await this.userRepository.findOne({
+            where: { id: userId }, relations: ['usership'],
+            select: { tenant: { id: true }, role: { group: true, rolePermissions: { permission: { name: true, parent: { name: true } }, isActive: true } } }
+        });
+        if (user && await compareKey(user.usership.hashedRefreshToken, refreshToken)) {
+            const permissions = user.role.rolePermissions
+                .filter(rolePermission => rolePermission.isActive)
+                .map(rolePermission => rolePermission.permission.parent.name + ':' + rolePermission.permission.name)
+            return { id: user.id, isActive: user.isActive, tenantId: user.tenant?.id, roleGroup: user.role.group, permissions };
+        }
         throw new UnauthorizedException('User not found or Credentials are invalid!');
     }
 

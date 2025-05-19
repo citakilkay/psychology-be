@@ -6,7 +6,7 @@ import { plainToInstance } from 'class-transformer';
 import { Role, Tenant, User, Usership } from 'src/database/entities';
 import { CreateUserDto, FilterUserDto, UpdateUserDto } from './dto/payload.dto';
 import { UserDetailDto, UserDto } from './dto/response.dto';
-import { RoleGroup } from 'src/shared/enums/role-group.enum';
+import { RoleGroup } from "src/shared/enums";
 
 @Injectable()
 export class UsersService {

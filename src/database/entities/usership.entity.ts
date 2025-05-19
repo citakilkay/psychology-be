@@ -20,4 +20,7 @@ export class Usership {
     @OneToOne(() => User, user => user.usership)
     user: User;
 
+    @Column({ nullable: true })
+    lastTokenRefreshDate?: Date;
+
 }

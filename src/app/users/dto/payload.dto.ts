@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsEmail, IsUUID, Matches, MinLength } from "class-validator";
-import { RoleGroup } from "src/shared/enums/role-group.enum";
+import { RoleGroup } from "src/shared/enums";
 import { User } from "src/database/entities";
 import { IFilterDto } from "src/shared/utils/filter-dto.interface";
 

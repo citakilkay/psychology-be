@@ -1,10 +1,10 @@
-import { HttpException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { Permission, Role, RolePermission, User } from '../entities';
 import { parentPermissions, permissions, roles, users } from './seed.data';
 import { hashAKey } from 'src/shared/utils/handlers';
-import { RoleGroup } from 'src/shared/enums/role-group.enum';
+import { RoleGroup } from "src/shared/enums";
 
 @Injectable()
 export class SeedService {
