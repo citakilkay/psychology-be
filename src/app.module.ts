@@ -8,6 +8,7 @@ import { AuthModule } from './app/auth/auth.module';
 import { getConfig } from './shared/config';
 import { SeedModule } from './database/seeds/seeds.module';
 import { SeedService } from './database/seeds/seeds.service';
+import { SharedModule } from './shared.module';
 
 const config = getConfig();
 const autoLoadEntities = config.db.AUTO_LOAD_ENTITIES;
@@ -15,7 +16,7 @@ const synchronize = config.db.SYNCHRONIZE;
 const sslRejectUnauthorized = config.db.SSL_REJECT_UNAUTHORIZED;
 
 @Module({
-  imports: [SeedModule, UsersModule, PermissionsModule, RolesModule, AuthModule, SeedModule, ConfigModule.forRoot({ isGlobal: true }),
+  imports: [SharedModule, SeedModule, UsersModule, PermissionsModule, RolesModule, AuthModule, SeedModule, ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
