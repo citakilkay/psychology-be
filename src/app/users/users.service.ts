@@ -18,7 +18,7 @@ export class UsersService {
         @InjectRepository(Tenant)
         private tenantRepository: Repository<Tenant>,
     ) { }
-    async getAll(filterDto: FilterUserDto, /*#TODO user: User*/): Promise<[UserDto[], number]> {
+    async getAll(filterDto: FilterUserDto, tenantIdOfUser?: string): Promise<[UserDto[], number]> {
         const { search, page = 1, pageSize = 10, orderBy, orderDirection, ...otherFilters } = filterDto
         const skip = (page - 1) * pageSize;
         // Generate dynamic search conditions
@@ -45,9 +45,15 @@ export class UsersService {
                 }
             )
         }
+        if (tenantIdOfUser) {
+            customWhereOptions.push(
+                {
+                    tenant: { id: tenantIdOfUser }
+                }
+            )
+        }
         const [users, total] = await this.userRepository.findAndCount({
             where: customWhereOptions.length > 0 ? customWhereOptions : {},
-            relations: ['role', 'usership'],
             select: { role: { name: true }, usership: { lastLoginDate: true, updatedAt: true }, tenant: { id: true, fullBrandName: true } },
             skip,
             take: pageSize,
@@ -58,17 +64,26 @@ export class UsersService {
 
         return [usersToResponse, total];
     }
-    async get(id: string): Promise<UserDetailDto> {
-        const user = await this.userRepository.findOne({ where: { id }, relations: ['role'] })
+    async get(id: string, tenantId?: string): Promise<UserDetailDto> {
+        const customWhereOptions: FindOptionsWhere<User>[] = [{ id }];
+        if (tenantId) {
+            customWhereOptions.push({ tenant: { id: tenantId } })
+        }
+        const user = await this.userRepository.findOne({ where: customWhereOptions, relations: ['role'] })
         if (user) {
             return plainToInstance(UserDetailDto, user, { excludeExtraneousValues: true });
         }
         throw new HttpException(`User with ID ${id} is not found`, HttpStatus.NOT_FOUND);
     }
 
-    async create(createUserDto: CreateUserDto): Promise<UserDetailDto> {
+    async create(createUserDto: CreateUserDto, tenantIdOfUser?: string): Promise<UserDetailDto> {
 
         const { password, roleId, tenantId, ...userData } = createUserDto;
+
+        if (tenantIdOfUser && tenantIdOfUser !== tenantId) {
+            throw new HttpException(`You are not allowed to assign users to the tenant with ID '${tenantId}'.`, HttpStatus.FORBIDDEN);
+        }
+
         const hashedPassword = await hashAKey(password)
         const role = await this.roleRepository.findOne({ where: { id: roleId } })
         const tenant = await this.tenantRepository.findOne({ where: { id: tenantId } })
@@ -86,10 +101,13 @@ export class UsersService {
         }
     }
 
-    async update(id: string, updateUserDto: UpdateUserDto): Promise<UserDetailDto> {
-        const userToUpdate = await this.userRepository.findOne({ where: { id } })
+    async update(id: string, updateUserDto: UpdateUserDto, tenantIdOfUser?: string): Promise<UserDetailDto> {
+        const customWhereOptions: FindOptionsWhere<User>[] = [{ id }];
+        if (tenantIdOfUser) {
+            customWhereOptions.push({ tenant: { id: tenantIdOfUser } })
+        }
+        const userToUpdate = await this.userRepository.findOne({ where: customWhereOptions })
         // Merge updateUserDto into userToUpdate
-
         if (userToUpdate) {
             const userData = plainToInstance(User, { ...userToUpdate, ...updateUserDto });
             try {
@@ -102,8 +120,12 @@ export class UsersService {
         throw new HttpException(`User with id ${id} not found`, HttpStatus.NOT_FOUND);
     }
 
-    async delete(id: string): Promise<void> {
-        const deleteToUser = await this.userRepository.findOne({ where: { id }, select: { role: { group: true }, tenant: { isActive: true, id: true, name: true, admin: { id: true } } } })
+    async delete(id: string, tenantIdOfUser?: string): Promise<void> {
+        const customWhereOptions: FindOptionsWhere<User>[] = [{ id }];
+        if (tenantIdOfUser) {
+            customWhereOptions.push({ tenant: { id: tenantIdOfUser } })
+        }
+        const deleteToUser = await this.userRepository.findOne({ where: customWhereOptions, select: { role: { group: true }, tenant: { isActive: true, id: true, name: true, admin: { id: true } } } })
         if (!deleteToUser) {
             throw new HttpException(`User with id ${id} not found`, HttpStatus.NOT_FOUND);
         }

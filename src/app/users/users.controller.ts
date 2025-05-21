@@ -4,7 +4,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto, FilterUserDto, UpdateUserDto } from './dto/payload.dto';
 import { UserDetailDto, UserDto } from './dto/response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RequirePermissions } from 'src/shared/decorators';
+import { GetUser, RequirePermissions } from 'src/shared/decorators';
 import { AppPermission } from 'src/shared/enums';
 import { PermissionGuard } from '../auth/guards';
 
@@ -21,26 +21,24 @@ export class UsersController {
     @Get()
     @ApiOperation({ summary: 'Get All User' })
     @ApiResponse({ status: HttpStatus.PARTIAL_CONTENT })
-    // @UseGuards(RolesGuard)
-    // @Roles(Role.Admin, Role.SuperAdmin)
-    async getAll(@Query() filterUserDto: FilterUserDto, /*@GetUser() user */): Promise<[UserDto[], number]> {
-        return await this.userService.getAll(filterUserDto /*,user */)
+    async getAll(@Query() filterUserDto: FilterUserDto, @GetUser('tenantId') tenantId?: string): Promise<[UserDto[], number]> {
+        return await this.userService.getAll(filterUserDto, tenantId)
     }
 
     @RequirePermissions(AppPermission.UserRead)
     @Get('/:id')
     @ApiOperation({ summary: 'Get User by Id' })
     @ApiResponse({ status: HttpStatus.OK })
-    async get(@Param('id') id: string): Promise<UserDetailDto> {
-        return await this.userService.get(id)
+    async get(@Param('id') id: string, @GetUser('tenantId') tenantId?: string): Promise<UserDetailDto> {
+        return await this.userService.get(id, tenantId)
     }
 
     @RequirePermissions(AppPermission.UserWrite)
     @Post()
     @ApiOperation({ summary: 'Create a User' })
     @ApiResponse({ status: HttpStatus.CREATED })
-    async create(@Body() createUserDto: CreateUserDto): Promise<UserDetailDto> {
-        return await this.userService.create(createUserDto)
+    async create(@Body() createUserDto: CreateUserDto, @GetUser('tenantId') tenantId?: string): Promise<UserDetailDto> {
+        return await this.userService.create(createUserDto, tenantId)
     }
 
     @RequirePermissions(AppPermission.UserWrite)
@@ -48,7 +46,7 @@ export class UsersController {
     @Put('/:id')
     @ApiOperation({ summary: 'Update a User' })
     @ApiResponse({ status: HttpStatus.OK })
-    async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<UserDetailDto> {
+    async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @GetUser('tenantId') tenantId?: string): Promise<UserDetailDto> {
         return await this.userService.update(id, updateUserDto)
     }
 
@@ -57,8 +55,8 @@ export class UsersController {
     @Delete('/:id')
     @ApiOperation({ summary: 'Delete a User' })
     @ApiResponse({ status: HttpStatus.NO_CONTENT })
-    async delete(@Param('id') id: string): Promise<void> {
-        return await this.userService.delete(id)
+    async delete(@Param('id') id: string, @GetUser('tenantId') tenantId?: string): Promise<void> {
+        return await this.userService.delete(id, tenantId)
     }
 
     // #TODO -- changePassword endpoint after auth 

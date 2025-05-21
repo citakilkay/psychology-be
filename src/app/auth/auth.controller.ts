@@ -1,12 +1,13 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { AuthService } from "./auth.service";
-import { RequestWithUser, LoginCredentialsDto, LoginResponseDto, RegisterCredentialsDto, RefreshTokenResponseDto } from "./dto";
+import { LoginCredentialsDto, LoginResponseDto, RegisterCredentialsDto, RefreshTokenResponseDto, JwtPayload } from "./dto";
 import { LocalAuthGuard } from "./guards";
 import { UserDetailDto } from "../users/dto/response.dto";
 import { RefreshAuthGuard } from "./guards/refresh-auth.guard";
 import { Response } from "express";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+import { GetUser } from "src/shared/decorators";
 
 @Controller('auth')
 @ApiTags('auth')
@@ -25,8 +26,7 @@ export class AuthController {
     @Post('login')
     @ApiOperation({ summary: 'Login with Local Authenticate' })
     @ApiResponse({ status: HttpStatus.OK })
-    async login(@Body() loginCredentials: LoginCredentialsDto, @Req() req: RequestWithUser, @Res() res: Response): Promise<LoginResponseDto> {
-        const user = req.user;
+    async login(@Body() loginCredentials: LoginCredentialsDto, @GetUser() user: JwtPayload, @Res() res: Response): Promise<LoginResponseDto> {
         const loginResponse = await this.authService.login(user, res);
         res.status(HttpStatus.OK).json(loginResponse);
         return loginResponse;
@@ -37,8 +37,7 @@ export class AuthController {
     @Post('refresh-token')
     @ApiOperation({ summary: 'Refresh Token' })
     @ApiResponse({ status: HttpStatus.OK, type: RefreshTokenResponseDto })
-    async refreshToken(@Req() req: RequestWithUser, @Res() res: Response): Promise<RefreshTokenResponseDto> {
-        const user = req.user;
+    async refreshToken(@GetUser() user, @Res() res: Response): Promise<RefreshTokenResponseDto> {
         const response = await this.authService.refreshToken(user, res)
         res.status(HttpStatus.OK).json(response); // #TEST this one returns a new refresh token in cookies
         return response;
@@ -49,8 +48,7 @@ export class AuthController {
     @Post('logout')
     @ApiOperation({ summary: 'Logout a user' })
     @ApiResponse({ status: HttpStatus.OK })
-    async logout(@Req() req: RequestWithUser): Promise<void> {
-        const user = req.user;
+    async logout(@GetUser() user): Promise<void> {
         await this.authService.logout(user.id);
     }
 }
