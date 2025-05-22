@@ -23,7 +23,8 @@ const config = getConfig();
 })
 export class AuthModule { }
 
-// kalan yerden youtube sakura
+// #TODO
+//  kalan yerden youtube sakura
 // strategy icinde kullanilan functionlar controller icinde kullanilan functionlar ile ayni yerde olması dogru mu? CHATGPT
 // + user logout olunca refresh token ve access token invalid hale geldiginden emin ol.
 // + implement a login date

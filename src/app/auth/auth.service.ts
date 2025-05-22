@@ -2,9 +2,9 @@ import { HttpException, HttpStatus, Injectable, UnauthorizedException } from "@n
 import { InjectRepository } from "@nestjs/typeorm";
 import { Response } from "express";
 import { User } from "src/database/entities/user.entity";
-import { QueryFailedError, Repository } from "typeorm";
-import { Role, RolePermission, Usership } from "src/database/entities";
-import { LoginResponseDto, JwtPayload, RegisterCredentialsDto, RefreshTokenResponseDto } from "./dto";
+import { Repository } from "typeorm";
+import { Role, Usership } from "src/database/entities";
+import { LoginResponseDto, JwtPayload, RegisterCredentialsDto, RefreshTokenResponseDto, ReqUser } from "./dto";
 import { compareKey, customizeException, hashAKey } from "src/shared/utils/handlers";
 import { RoleGroup } from "src/shared/enums";
 import { UserDetailDto } from "../users/dto/response.dto";
@@ -40,58 +40,111 @@ export class AuthService {
             return customizeException(err, { entity: "User" })
         }
     }
-    async login(loginPayload: JwtPayload, res: Response): Promise<LoginResponseDto> {
-        const accessToken = await this.generateAccessToken(loginPayload)
-        const refreshToken = await this.generateRefreshToken(loginPayload)
+    async login(user: ReqUser, res: Response): Promise<LoginResponseDto> {
+        const jwtPaylod: JwtPayload = { id: user.id, username: user.username }
+        const accessToken = await this.generateAccessToken(jwtPaylod)
+        const refreshToken = await this.generateRefreshToken(jwtPaylod)
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: false, // #TODO: change to true in production
             maxAge: config.jwt.JWT_REFRESH_TOKEN_EXPIRED_IN_HOURS * 60 * 60 * 1000
         })
         const hashedRefreshToken = await hashAKey(refreshToken)
-        await this.userRepository.update(loginPayload.id, { usership: { lastLoginDate: new Date(), hashedRefreshToken } })
-        return { accessToken, expireInHours: config.jwt.JWT_EXPIRED_IN_HOURS, userId: loginPayload.id }
+        await this.userRepository.update(user.id, { usership: { lastLoginDate: new Date(), hashedRefreshToken } })
+        return { accessToken, expireInHours: config.jwt.JWT_EXPIRED_IN_HOURS, userId: user.id }
     }
 
-    async validateUser(usernameOrEmailAddress: string, password: string): Promise<JwtPayload> {
+    async validateUser(usernameOrEmailAddress: string, password: string): Promise<ReqUser> {
         const user = await this.userRepository.findOne({
-            where: [{ username: usernameOrEmailAddress }, { emailAddress: usernameOrEmailAddress }],
-            select: { tenant: { id: true }, role: { group: true, rolePermissions: { permission: { name: true, parent: { name: true } }, isActive: true } } }
+            where: [
+                { username: usernameOrEmailAddress },
+                { emailAddress: usernameOrEmailAddress }
+            ],
+            relations: {
+                tenant: true,  // Load tenant relation
+                role: {
+                    rolePermissions: {
+                        permission: {
+                            parent: true  // Load nested relations for permissions
+                        }
+                    }
+                }
+            },
+            select: {
+                tenant: { id: true },
+                role: {
+                    group: true,
+                    rolePermissions: {
+                        isActive: true,
+                        permission: {
+                            name: true,
+                            parent: { name: true }
+                        }
+                    }
+                }
+            }
         });
+
         if (user && await compareKey(user.password, password)) {
             const permissions = user.role.rolePermissions
                 .filter(rolePermission => rolePermission.isActive)
                 .map(rolePermission => rolePermission.permission.getAppPermission())
 
-            return { id: user.id, isActive: user.isActive, tenantId: user.tenant?.id, roleGroup: user.role.group, permissions };
+            return { id: user.id, username: user.username, isActive: user.isActive, tenantId: user.tenant?.id, roleGroup: user.role.group, permissions };
         }
+
         throw new HttpException('Please check your login credentials', HttpStatus.UNAUTHORIZED);
     }
 
-    async validateJwtUser(userId: string): Promise<User> {
+    async validateJwtUser(userId: string): Promise<ReqUser> {
         const user = await this.userRepository.findOne({
             where: { id: userId },
+            relations: { // this is used for nested relations instead of array ['tenant', 'role'] -- you can't select role.rolePermissions in array expression
+                tenant: true,
+                role: {
+                    rolePermissions: {
+                        permission: {
+                            parent: true
+                        }
+                    }
+                }
+            },
             select: { tenant: { id: true }, role: { group: true, rolePermissions: { permission: { name: true }, isActive: true } } }
         });
         if (!user) throw new UnauthorizedException('User not found!');
-        return user;
+        const permissions = user.role.rolePermissions
+            .filter(rolePermission => rolePermission.isActive)
+            .map(rolePermission => rolePermission.permission.getAppPermission())
+        return { id: user.id, username: user.username, isActive: user.isActive, tenantId: user.tenant?.id, roleGroup: user.role.group, permissions };
     }
 
-    async validateRefreshToken(userId: string, refreshToken: string): Promise<JwtPayload> {
+    async validateRefreshToken(userId: string, refreshToken: string): Promise<ReqUser> {
         const user = await this.userRepository.findOne({
-            where: { id: userId }, relations: ['usership'],
+            where: { id: userId },
+            relations: {
+                usership: true,
+                tenant: true,
+                role: {
+                    rolePermissions: {
+                        permission: {
+                            parent: true
+                        }
+                    }
+                }
+            },
             select: { tenant: { id: true }, role: { group: true, rolePermissions: { permission: { name: true, parent: { name: true } }, isActive: true } } }
         });
         if (user && await compareKey(user.usership.hashedRefreshToken, refreshToken)) {
             const permissions = user.role.rolePermissions
                 .filter(rolePermission => rolePermission.isActive)
                 .map(rolePermission => rolePermission.permission.getAppPermission())
-            return { id: user.id, isActive: user.isActive, tenantId: user.tenant?.id, roleGroup: user.role.group, permissions };
+            return { id: user.id, username: user.username, isActive: user.isActive, tenantId: user.tenant?.id, roleGroup: user.role.group, permissions };
         }
         throw new UnauthorizedException('User not found or Credentials are invalid!');
     }
 
-    async refreshToken(refreshPayload: JwtPayload, res: Response): Promise<RefreshTokenResponseDto> {
+    async refreshToken(user: ReqUser, res: Response): Promise<RefreshTokenResponseDto> {
+        const refreshPayload: JwtPayload = { id: user.id, username: user.username }
         const accessToken = await this.generateAccessToken(refreshPayload);
         const refreshToken = await this.generateRefreshToken(refreshPayload);
         const hashedRefreshToken = await hashAKey(refreshToken)

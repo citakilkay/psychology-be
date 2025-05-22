@@ -3,7 +3,7 @@ import { Strategy } from 'passport-jwt';
 import { Injectable } from '@nestjs/common';
 import { Request } from 'express';
 import { getConfig } from 'src/shared/config';
-import { JwtPayload } from '../dto';
+import { JwtPayload, ReqUser } from '../dto';
 import { AuthService } from '../auth.service';
 
 const config = getConfig();
@@ -26,7 +26,7 @@ export class RefreshJwtStrategy extends PassportStrategy(
         });
     }
 
-    validate(req: Request, payload: JwtPayload): Promise<JwtPayload> {
+    validate(req: Request, payload: JwtPayload): Promise<ReqUser> {
         const refreshToken = req.cookies?.refreshToken;
         const userId = payload.id;
         return this.authService.validateRefreshToken(userId, refreshToken);

@@ -1,6 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { JwtPayload } from '../dto';
+import { JwtPayload, ReqUser } from '../dto';
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
@@ -13,7 +13,7 @@ export class PermissionGuard implements CanActivate {
         }
 
         const request = context.switchToHttp().getRequest();
-        const user: JwtPayload = request.user;
+        const user: ReqUser = request.user;
 
         const hasPermission = requiredPermissions.every(reqPermission =>
             user.permissions.some(userPermission => userPermission === reqPermission)

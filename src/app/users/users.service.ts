@@ -19,48 +19,54 @@ export class UsersService {
         private tenantRepository: Repository<Tenant>,
     ) { }
     async getAll(filterDto: FilterUserDto, tenantIdOfUser?: string): Promise<[UserDto[], number]> {
-        const { search, page = 1, pageSize = 10, orderBy, orderDirection, ...otherFilters } = filterDto
+        const { search, page = 1, pageSize = 10, orderBy, orderDirection, ...otherFilters } = filterDto;
         const skip = (page - 1) * pageSize;
-        // Generate dynamic search conditions
+
+        // Generate OR conditions for search
         const searchConditions = handleSearchConditions<User>(search, ['username', 'firstName', 'lastName', 'emailAddress']);
 
-        const customWhereOptions: FindOptionsWhere<User>[] = [...searchConditions];
+        // Start with tenant filter as base AND condition
+        const baseWhere: FindOptionsWhere<User> = tenantIdOfUser
+            ? { tenant: { id: tenantIdOfUser } }
+            : {};
 
+        // Additional AND conditions
         if (typeof otherFilters.isActive === 'boolean') {
-            customWhereOptions.push({ isActive: otherFilters.isActive });
+            baseWhere.isActive = otherFilters.isActive;
         }
         if (otherFilters.roleGroup) {
-            customWhereOptions.push(
-                {
-                    role: {
-                        group: otherFilters.roleGroup
-                    }
-                }
-            )
+            baseWhere.role = { group: otherFilters.roleGroup };
         }
-        if (search) {
-            customWhereOptions.push(
-                {
-                    role: { name: ILike(`%${search}%`) }
-                }
-            )
-        }
-        if (tenantIdOfUser) {
-            customWhereOptions.push(
-                {
-                    tenant: { id: tenantIdOfUser }
-                }
-            )
-        }
+
+        // Combine all conditions
+        const where: FindOptionsWhere<User>[] | FindOptionsWhere<User> = searchConditions.length > 0
+            ? [
+                // First object contains all AND conditions
+                { ...baseWhere },
+                // Subsequent objects are OR conditions (search)
+                ...searchConditions,
+                // Additional OR condition for role name search
+                ...(search ? [{ role: { name: ILike(`%${search}%`) } }] : [])
+            ]
+            : baseWhere;
+
         const [users, total] = await this.userRepository.findAndCount({
-            where: customWhereOptions.length > 0 ? customWhereOptions : {},
-            select: { role: { name: true }, usership: { lastLoginDate: true, updatedAt: true }, tenant: { id: true, fullBrandName: true } },
+            where,
+            relations: ['role', 'usership', 'tenant'],
+            select: {
+                role: { name: true },
+                usership: { lastLoginDate: true, updatedAt: true },
+                tenant: { id: true, fullBrandName: true }
+            },
             skip,
             take: pageSize,
             order: { [orderBy]: orderDirection },
         });
 
-        const usersToResponse = plainToInstance(UserDto, users, { excludeExtraneousValues: true, groups: ['userservice'] });
+        const usersToResponse = plainToInstance(UserDto, users, {
+            excludeExtraneousValues: true,
+            groups: ['userservice']
+        });
 
         return [usersToResponse, total];
     }

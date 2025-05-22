@@ -2,13 +2,19 @@ import { RoleGroup } from "src/shared/enums";
 
 export interface JwtPayload {
     id: string,
-    tenantId?: string,
+    username: string,
+}
+
+export interface ReqUser {
+    id: string,
+    username: string,
     isActive: boolean,
+    tenantId: string,
     roleGroup: RoleGroup,
     permissions: string[]
 }
 
 export interface RequestWithUser extends Request {
     cookies: any;
-    user: JwtPayload;
+    user: ReqUser;
 }
