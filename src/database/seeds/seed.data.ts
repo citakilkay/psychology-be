@@ -120,10 +120,10 @@ export const roles: SeedRole[] = [{
 }]
 
 export const users: SeedUser[] = [{
-    username: config.seed.superadmin.PASSWORD,
+    username: config.seed.superadmin.USERNAME,
     firstName: "Super",
     lastName: "Admin",
-    emailAddress: config.seed.superadmin.PASSWORD,
+    emailAddress: config.seed.superadmin.EMAIL_ADDRESS,
     password: config.seed.superadmin.PASSWORD,
     isActive: true,
 }]

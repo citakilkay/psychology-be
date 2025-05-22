@@ -3,6 +3,25 @@ import { EntityBase } from "./common/base.entity";
 import { User } from ".";
 import { IsEmail, IsOptional, IsPhoneNumber } from "class-validator";
 
+export class ContactInfo {
+    website: string;
+    socialMedia?: {
+        instagramUsername?: string;
+        mediumUsername?: string;
+    }
+    firstName?: string;
+    lastName?: string;
+    @IsOptional()
+    @IsEmail({}, { message: 'Email Address is invalid' })
+    emailAddress?: string;
+    @IsOptional()
+    @IsPhoneNumber(null, { message: 'Invalid phone number' })
+    phoneNumber?: string;
+    address?: {
+        mapLink?: string; // #TODO --  long and lat tut, link yerine
+        addressinText?: string;
+    };
+};
 @Entity()
 export class Tenant extends EntityBase {
     @Column({ unique: true, nullable: false })
@@ -29,23 +48,3 @@ export class Tenant extends EntityBase {
 
     // #TODO tenant.setup -- currency falan -profit model falan - kiralama mi comission mu
 }
-
-export class ContactInfo {
-    website: string;
-    socialMedia?: {
-        instagramUsername?: string;
-        mediumUsername?: string;
-    }
-    firstName?: string;
-    lastName?: string;
-    @IsOptional()
-    @IsEmail({}, { message: 'Email Address is invalid' })
-    emailAddress?: string;
-    @IsOptional()
-    @IsPhoneNumber(null, { message: 'Invalid phone number' })
-    phoneNumber?: string;
-    address?: {
-        mapLink?: string; // #TODO --  long and lat tut, link yerine
-        addressinText?: string;
-    };
-};

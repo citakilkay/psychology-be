@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
-import { Permission, Role, RolePermission, User } from '../entities';
+import { Permission, Role, RolePermission, User, Usership } from '../entities';
 import { parentPermissions, permissions, roles, users } from './seed.data';
 import { hashAKey } from 'src/shared/utils/handlers';
 import { RoleGroup } from "src/shared/enums";
@@ -95,6 +95,8 @@ export class SeedService {
                     const hashedPassword = await hashAKey(user.password)
                     user.password = hashedPassword
                     const newUser = await this.userRepository.create(user)
+                    const usership = new Usership();
+                    newUser.usership = usership;
                     newUser.role = superAdminRole
                     await this.userRepository.save(newUser)
                 }
