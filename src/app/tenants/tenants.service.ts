@@ -16,24 +16,29 @@ export class TenantsService {
         @InjectRepository(User)
         private userRepository: Repository<User>
     ) { }
-    async getAll(filterDto: FilterTenantDto, /*#TODO user: User*/): Promise<[TenantDto[], number]> {
-        const { search, page = 1, pageSize = 10, orderBy, orderDirection, isActive } = filterDto
+    async getAll(filterDto: FilterTenantDto): Promise<[TenantDto[], number]> {
+        const { search, page = 1, pageSize = 10, orderBy, orderDirection, isActive } = filterDto;
         const skip = (page - 1) * pageSize;
 
-
-        const searchConditions = handleSearchConditions<Tenant>(search, ['name', 'fullBrandName', 'tenantUrlTag']);
-
-        const customWhereOptions: FindOptionsWhere<Tenant>[] = [...searchConditions];
-
+        const baseWhere: FindOptionsWhere<Tenant> = {};
         if (typeof isActive === 'boolean') {
-            customWhereOptions.push({ isActive });
+            baseWhere.isActive = isActive;
         }
+        // Search conditions (OR)
+        const searchConditions = search
+            ? handleSearchConditions<Tenant>(search, ['name', 'fullBrandName', 'tenantUrlTag'])
+            : [];
+
+        // Combine conditions
+        const where: FindOptionsWhere<Tenant>[] | FindOptionsWhere<Tenant> = searchConditions.length > 0
+            ? [baseWhere, ...searchConditions]
+            : baseWhere;
 
         const [tenants, total] = await this.tenantRepository.findAndCount({
-            where: customWhereOptions.length > 0 ? customWhereOptions : {},
+            where,
             skip,
             take: pageSize,
-            order: { [orderBy]: orderDirection },
+            order: { [orderBy]: orderDirection }
         });
 
         const tenantsToResponse = plainToInstance(TenantDto, tenants, { excludeExtraneousValues: true });

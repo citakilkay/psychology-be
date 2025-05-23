@@ -37,6 +37,13 @@ export class UsersService {
         if (otherFilters.roleGroup) {
             baseWhere.role = { group: otherFilters.roleGroup };
         }
+        if (search) {
+            searchConditions.push(
+                {
+                    role: { name: ILike(`%${search}%`) }
+                }
+            )
+        }
 
         // Combine all conditions
         const where: FindOptionsWhere<User>[] | FindOptionsWhere<User> = searchConditions.length > 0
@@ -44,9 +51,7 @@ export class UsersService {
                 // First object contains all AND conditions
                 { ...baseWhere },
                 // Subsequent objects are OR conditions (search)
-                ...searchConditions,
-                // Additional OR condition for role name search
-                ...(search ? [{ role: { name: ILike(`%${search}%`) } }] : [])
+                ...searchConditions
             ]
             : baseWhere;
 
@@ -70,10 +75,10 @@ export class UsersService {
 
         return [usersToResponse, total];
     }
-    async get(id: string, tenantId?: string): Promise<UserDetailDto> {
-        const customWhereOptions: FindOptionsWhere<User>[] = [{ id }];
-        if (tenantId) {
-            customWhereOptions.push({ tenant: { id: tenantId } })
+    async get(id: string, tenantIdOfUser?: string): Promise<UserDetailDto> {
+        const customWhereOptions: FindOptionsWhere<User> = { id };
+        if (tenantIdOfUser) {
+            customWhereOptions.tenant = { id: tenantIdOfUser }
         }
         const user = await this.userRepository.findOne({ where: customWhereOptions, relations: ['role'] })
         if (user) {
@@ -108,9 +113,9 @@ export class UsersService {
     }
 
     async update(id: string, updateUserDto: UpdateUserDto, tenantIdOfUser?: string): Promise<UserDetailDto> {
-        const customWhereOptions: FindOptionsWhere<User>[] = [{ id }];
+        const customWhereOptions: FindOptionsWhere<User> = { id };
         if (tenantIdOfUser) {
-            customWhereOptions.push({ tenant: { id: tenantIdOfUser } })
+            customWhereOptions.tenant = { id: tenantIdOfUser }
         }
         const userToUpdate = await this.userRepository.findOne({ where: customWhereOptions })
         // Merge updateUserDto into userToUpdate

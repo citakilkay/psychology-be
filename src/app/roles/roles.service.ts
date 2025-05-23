@@ -21,16 +21,17 @@ export class RolesService {
         const { search, page = 1, pageSize = 10, orderBy, orderDirection, roleGroup } = filterDto
         const skip = (page - 1) * pageSize;
 
-
-        const searchConditions = handleSearchConditions<Role>(search, ['name']);
-        const customWhereOptions: FindOptionsWhere<Role>[] = [...searchConditions];
-
+        const baseWhere: FindOptionsWhere<Role> = {};
         if (roleGroup) {
-            customWhereOptions.push({ group: roleGroup });
+            baseWhere.group = roleGroup;
         }
+        const searchConditions = handleSearchConditions<Role>(search, ['name']);
+        const where: FindOptionsWhere<Role>[] | FindOptionsWhere<Role> = searchConditions.length > 0
+            ? [baseWhere, ...searchConditions]
+            : baseWhere;
 
         const [roles, total] = await this.roleRepository.findAndCount({
-            where: customWhereOptions.length > 0 ? customWhereOptions : {},
+            where,
             skip,
             take: pageSize,
             order: { [orderBy]: orderDirection },
