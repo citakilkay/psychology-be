@@ -1,4 +1,5 @@
 import { RoleGroup } from "src/shared/enums";
+import { Request } from 'express';
 
 export interface JwtPayload {
     id: string,

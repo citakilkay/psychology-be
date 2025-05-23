@@ -1,11 +1,11 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { AuthService } from "./auth.service";
-import { LoginCredentialsDto, LoginResponseDto, RegisterCredentialsDto, RefreshTokenResponseDto, ReqUser } from "./dto";
+import { LoginCredentialsDto, LoginResponseDto, RegisterCredentialsDto, RefreshTokenResponseDto, ReqUser, RequestWithUser } from "./dto";
 import { LocalAuthGuard } from "./guards";
 import { UserDetailDto } from "../users/dto/response.dto";
 import { RefreshAuthGuard } from "./guards/refresh-auth.guard";
-import { Response } from "express";
+import { Response, Request } from "express";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { GetUser } from "src/shared/decorators";
 
@@ -48,7 +48,9 @@ export class AuthController {
     @Post('logout')
     @ApiOperation({ summary: 'Logout a user' })
     @ApiResponse({ status: HttpStatus.OK })
-    async logout(@GetUser() user: ReqUser): Promise<void> {
+    async logout(@GetUser() user: ReqUser, @Res() res: Response): Promise<void> {
         await this.authService.logout(user.id);
+        res.clearCookie('refreshToken');
+        return
     }
 }

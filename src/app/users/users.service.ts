@@ -131,7 +131,14 @@ export class UsersService {
         if (tenantIdOfUser) {
             customWhereOptions.push({ tenant: { id: tenantIdOfUser } })
         }
-        const deleteToUser = await this.userRepository.findOne({ where: customWhereOptions, select: { role: { group: true }, tenant: { isActive: true, id: true, name: true, admin: { id: true } } } })
+        const deleteToUser = await this.userRepository.findOne({
+            where: customWhereOptions, relations: {
+                role: true,
+                tenant: {
+                    admin: true
+                }
+            }, select: { role: { group: true }, tenant: { isActive: true, id: true, name: true, admin: { id: true } } }
+        })
         if (!deleteToUser) {
             throw new HttpException(`User with id ${id} not found`, HttpStatus.NOT_FOUND);
         }

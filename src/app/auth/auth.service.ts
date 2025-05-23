@@ -107,11 +107,17 @@ export class AuthService {
                             parent: true
                         }
                     }
-                }
+                },
+                usership: true
             },
-            select: { tenant: { id: true }, role: { group: true, rolePermissions: { permission: { name: true }, isActive: true } } }
+            select: {
+                tenant: { id: true },
+                role: { group: true, rolePermissions: { permission: { name: true }, isActive: true } },
+                usership: { hashedRefreshToken: true }
+            }
         });
         if (!user) throw new UnauthorizedException('User not found!');
+        if (!user.usership.hashedRefreshToken) throw new UnauthorizedException('Please login!');
         const permissions = user.role.rolePermissions
             .filter(rolePermission => rolePermission.isActive)
             .map(rolePermission => rolePermission.permission.getAppPermission())
@@ -170,6 +176,7 @@ export class AuthService {
         const user = await this.userRepository.findOne({ where: { id: userId } })
         if (!user) throw new UnauthorizedException('User not found!');
         await this.userRepository.update(userId, { usership: { hashedRefreshToken: null } }) // #TEST -- repository.update updatedAt'i guncelliyor mu?
+
         return;
     }
 }

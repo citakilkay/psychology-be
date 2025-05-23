@@ -89,7 +89,7 @@ export class TenantsService {
         if (!deleteToTenant) {
             throw new HttpException(`Tenant with id ${id} not found`, HttpStatus.NOT_FOUND);
         }
-        const usersofTenant = await this.userRepository.find({ where: { tenant: { id } }, select: { role: { group: true } } })
+        const usersofTenant = await this.userRepository.find({ where: { tenant: { id } }, relations: ['role'], select: { role: { group: true } } })
         const usersWillbeDelete = usersofTenant.filter(user => RoleGroup.Admin != user.role.group)
         const usersWillbeInActive = usersofTenant.filter(user => RoleGroup.Admin == user.role.group)
         if (usersofTenant) {
