@@ -1,6 +1,7 @@
 import { Column, Entity, Index, ManyToOne, OneToMany, Unique } from "typeorm";
 import { EntityBase } from "./common/base.entity";
 import { RolePermission } from "./role-permission.entity";
+import { AppPermission } from "src/shared/enums";
 
 @Entity()
 @Unique('unique_name_within_parent', ['name', 'parent'])
@@ -27,8 +28,10 @@ export class Permission extends EntityBase {
     @OneToMany(() => RolePermission, rolePermission => rolePermission.permission, { cascade: true })
     rolePermissions: RolePermission[];
 
-    getAppPermission(): string {
+    getAppPermission(): AppPermission {
         const parentName = this.parent?.name;
-        return parentName ? `${parentName}:${this.name}` : `${this.name}:Default`;
+        const permissionKey = parentName ? `${parentName}:${this.name}` : `${this.name}:Default`;
+
+        return permissionKey as AppPermission;
     }
 }

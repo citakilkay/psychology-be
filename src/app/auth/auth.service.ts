@@ -20,6 +20,8 @@ export class AuthService {
         private userRepository: Repository<User>,
         @InjectRepository(Role)
         private roleRepository: Repository<Role>,
+        @InjectRepository(Usership)
+        private usershipRepository: Repository<Usership>,
         private jwtService: JwtService
     ) { }
 
@@ -40,6 +42,7 @@ export class AuthService {
             return customizeException(err, { entity: "User" })
         }
     }
+
     async login(user: ReqUser, res: Response): Promise<LoginResponseDto> {
         const jwtPaylod: JwtPayload = { id: user.id, username: user.username }
         const accessToken = await this.generateAccessToken(jwtPaylod)
@@ -50,7 +53,7 @@ export class AuthService {
             maxAge: config.jwt.JWT_REFRESH_TOKEN_EXPIRED_IN_HOURS * 60 * 60 * 1000
         })
         const hashedRefreshToken = await hashAKey(refreshToken)
-        await this.userRepository.update(user.id, { usership: { lastLoginDate: new Date(), hashedRefreshToken } })
+        await this.usershipRepository.update(user.usershipId, { lastLoginDate: new Date(), hashedRefreshToken });
         return { accessToken, expireInHours: config.jwt.JWT_EXPIRED_IN_HOURS, userId: user.id }
     }
 
@@ -61,28 +64,17 @@ export class AuthService {
                 { emailAddress: usernameOrEmailAddress }
             ],
             relations: {
-                tenant: true,  // Load tenant relation
+                tenant: true,
                 role: {
                     rolePermissions: {
                         permission: {
-                            parent: true  // Load nested relations for permissions
+                            parent: true
                         }
                     }
-                }
-            },
-            select: {
-                tenant: { id: true },
-                role: {
-                    group: true,
-                    rolePermissions: {
-                        isActive: true,
-                        permission: {
-                            name: true,
-                            parent: { name: true }
-                        }
-                    }
-                }
+                },
+                usership: true
             }
+            // Remove select entirely and let TypeORM load all fields
         });
 
         if (user && await compareKey(user.password, password)) {
@@ -90,7 +82,15 @@ export class AuthService {
                 .filter(rolePermission => rolePermission.isActive)
                 .map(rolePermission => rolePermission.permission.getAppPermission())
 
-            return { id: user.id, username: user.username, isActive: user.isActive, tenantId: user.tenant?.id, roleGroup: user.role.group, permissions };
+            return {
+                id: user.id,
+                username: user.username,
+                isActive: user.isActive,
+                tenantId: user.tenant?.id,
+                roleGroup: user.role.group,
+                usershipId: user.usership.id,
+                permissions
+            };
         }
 
         throw new HttpException('Please check your login credentials', HttpStatus.UNAUTHORIZED);
@@ -112,8 +112,6 @@ export class AuthService {
             },
             select: {
                 tenant: { id: true },
-                role: { group: true, rolePermissions: { permission: { name: true }, isActive: true } },
-                usership: { hashedRefreshToken: true }
             }
         });
         if (!user) throw new UnauthorizedException('User not found!');
@@ -121,7 +119,15 @@ export class AuthService {
         const permissions = user.role.rolePermissions
             .filter(rolePermission => rolePermission.isActive)
             .map(rolePermission => rolePermission.permission.getAppPermission())
-        return { id: user.id, username: user.username, isActive: user.isActive, tenantId: user.tenant?.id, roleGroup: user.role.group, permissions };
+        return {
+            id: user.id,
+            username: user.username,
+            isActive: user.isActive,
+            tenantId: user.tenant?.id,
+            roleGroup: user.role.group,
+            usershipId: user.usership.id,
+            permissions
+        };
     }
 
     async validateRefreshToken(userId: string, refreshToken: string): Promise<ReqUser> {
@@ -144,7 +150,15 @@ export class AuthService {
             const permissions = user.role.rolePermissions
                 .filter(rolePermission => rolePermission.isActive)
                 .map(rolePermission => rolePermission.permission.getAppPermission())
-            return { id: user.id, username: user.username, isActive: user.isActive, tenantId: user.tenant?.id, roleGroup: user.role.group, permissions };
+            return {
+                id: user.id,
+                username: user.username,
+                isActive: user.isActive,
+                tenantId: user.tenant?.id,
+                roleGroup: user.role.group,
+                usershipId: user.usership.id,
+                permissions
+            };
         }
         throw new UnauthorizedException('User not found or Credentials are invalid!');
     }
@@ -159,7 +173,7 @@ export class AuthService {
             secure: false, // #TODO: change to true in production
             maxAge: config.jwt.JWT_REFRESH_TOKEN_EXPIRED_IN_HOURS * 60 * 60 * 1000
         })
-        await this.userRepository.update(refreshPayload.id, { usership: { hashedRefreshToken } })
+        await this.usershipRepository.update(user.usershipId, { hashedRefreshToken })
         return { accessToken, expireInHours: config.jwt.JWT_EXPIRED_IN_HOURS, userId: refreshPayload.id };
     }
 
@@ -173,10 +187,9 @@ export class AuthService {
     }
 
     async logout(userId: string): Promise<void> {
-        const user = await this.userRepository.findOne({ where: { id: userId } })
+        const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['usership'] })
         if (!user) throw new UnauthorizedException('User not found!');
-        await this.userRepository.update(userId, { usership: { hashedRefreshToken: null } }) // #TEST -- repository.update updatedAt'i guncelliyor mu?
-
+        await this.usershipRepository.update(user.usership.id, { hashedRefreshToken: null }) // #TEST -- repository.update updatedAt'i guncelliyor mu?
         return;
     }
 }

@@ -80,9 +80,10 @@ export class UsersService {
         if (tenantIdOfUser) {
             customWhereOptions.tenant = { id: tenantIdOfUser }
         }
-        const user = await this.userRepository.findOne({ where: customWhereOptions, relations: ['role'] })
+        const user = await this.userRepository.findOne({ where: customWhereOptions, relations: ['role', 'usership', 'tenant'] })
         if (user) {
             return plainToInstance(UserDetailDto, user, { excludeExtraneousValues: true });
+
         }
         throw new HttpException(`User with ID ${id} is not found`, HttpStatus.NOT_FOUND);
     }
@@ -117,7 +118,7 @@ export class UsersService {
         if (tenantIdOfUser) {
             customWhereOptions.tenant = { id: tenantIdOfUser }
         }
-        const userToUpdate = await this.userRepository.findOne({ where: customWhereOptions })
+        const userToUpdate = await this.userRepository.findOne({ where: customWhereOptions, relations: ['role', 'usership', 'tenant'] })
         // Merge updateUserDto into userToUpdate
         if (userToUpdate) {
             const userData = plainToInstance(User, { ...userToUpdate, ...updateUserDto });

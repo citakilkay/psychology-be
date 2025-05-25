@@ -64,6 +64,7 @@ export class UserDto extends ResponseBaseUserDto {
 
 export class UserDetailDto extends ResponseBaseUserDto {
     @ApiProperty({ nullable: true })
+    @Expose()
     updatedAt?: Date;
 
     @ApiProperty({ type: RoleDto })
@@ -76,5 +77,6 @@ export class UserDetailDto extends ResponseBaseUserDto {
 
     @ApiProperty({ nullable: true })
     @Transform(({ obj }) => obj.usership.updatedAt) // #TEST
+    @Expose()
     lastActivityDate?: string;
 } 

@@ -57,49 +57,49 @@ export const parentPermissions: SeedParentPermission[] = [{
 }]
 
 export const permissions: SeedPermission[] = [{
-    name: AppPermission.UserRead,
+    name: "Read",
     description: "GET /user Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "User"
 }, {
-    name: AppPermission.UserWrite,
+    name: "Write",
     description: "POST, PUT, DELETE etc. /user Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "User"
 }, {
-    name: AppPermission.RoleRead,
+    name: "Read",
     description: "GET /role Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "Role"
 }, {
-    name: AppPermission.RoleWrite,
+    name: "Write",
     description: "POST, PUT, DELETE etc. /role Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "Role"
 }, {
-    name: AppPermission.PermissionRead,
+    name: "Read",
     description: "GET /permission Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "Permission"
 }, {
-    name: AppPermission.PermissionWrite,
+    name: "Write",
     description: "POST, PUT, DELETE etc. /permission Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "Permission"
 }, {
-    name: AppPermission.TenantRead,
+    name: "Read",
     description: "GET /tenant Endpoints",
     isDefault: false,
     isEditable: false,
     parentName: "Tenant"
 }, {
-    name: AppPermission.TenantWrite,
+    name: "Write",
     description: "POST, PUT, DELETE etc. /tenant Endpoints",
     isDefault: false,
     isEditable: false,

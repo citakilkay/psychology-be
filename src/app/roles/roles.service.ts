@@ -1,11 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { customizeException, handleSearchConditions } from 'src/shared/utils/handlers';
-import { FindOptionsWhere, In, QueryFailedError, Repository } from 'typeorm';
+import { FindOptionsWhere, In, IsNull, QueryFailedError, Repository } from 'typeorm';
 import { CreateRoleDto, FilterRoleDto, UpdateRoleDto } from './dto/payload.dto';
 import { RoleDetailDto, RoleDto } from './dto/response.dto';
 import { plainToInstance } from 'class-transformer';
 import { Permission, Role, RolePermission } from 'src/database/entities';
+import { RoleGroup } from 'src/shared/enums';
 
 @Injectable()
 export class RolesService {
@@ -59,7 +60,7 @@ export class RolesService {
             // Step 3: Map permissions to RolePermission
             const rolePermissions = permissions.map(permission => {
                 const rolePermission = new RolePermission();
-                rolePermission.isActive = permission.isDefault;
+                rolePermission.isActive = permission.isDefault || createdRole.group == RoleGroup.SuperAdmin;
                 rolePermission.role = createdRole;
                 rolePermission.permission = permission;
                 return rolePermission;

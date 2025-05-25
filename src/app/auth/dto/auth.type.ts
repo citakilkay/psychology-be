@@ -1,4 +1,4 @@
-import { RoleGroup } from "src/shared/enums";
+import { AppPermission, RoleGroup } from "src/shared/enums";
 import { Request } from 'express';
 
 export interface JwtPayload {
@@ -12,7 +12,8 @@ export interface ReqUser {
     isActive: boolean,
     tenantId: string,
     roleGroup: RoleGroup,
-    permissions: string[]
+    permissions: AppPermission[],
+    usershipId: string
 }
 
 export interface RequestWithUser extends Request {
