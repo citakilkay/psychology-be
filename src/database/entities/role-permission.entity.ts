@@ -6,10 +6,10 @@ export class RolePermission {
     @PrimaryGeneratedColumn('uuid')
     id: string
 
-    @ManyToOne(() => Role, (role) => role.rolePermissions)
+    @ManyToOne(() => Role, (role) => role.rolePermissions, { onDelete: 'CASCADE' })
     role: Role;
 
-    @ManyToOne(() => Permission, (permission) => permission.rolePermissions) // Removed inverseSide reference
+    @ManyToOne(() => Permission, (permission) => permission.rolePermissions, { onDelete: 'CASCADE' }) // Removed inverseSide reference
     permission: Permission;
 
     @Column({ default: false })

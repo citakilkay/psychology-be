@@ -6,7 +6,7 @@ export function customizeException(err: any, data: { entity: string, id?: string
     if (err instanceof QueryFailedError) {
         const conflictColumn = extractConflictColumn(err.driverError.detail)
         const conflictTable = extractReferencedTable(err.driverError.detail)
-        switch (err.driverError) {
+        switch (err.driverError.code) {
             case '23505':
                 throw new HttpException(`A ${data.entity} with the given ${conflictColumn} value already exists`, HttpStatus.CONFLICT);
             case '23503':
