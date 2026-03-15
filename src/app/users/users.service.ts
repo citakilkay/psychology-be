@@ -102,8 +102,13 @@ export class UsersService {
         if (!role) {
             throw new HttpException(`Role with id ${roleId} not found`, HttpStatus.NOT_FOUND);
         }
-        if (!tenant && role.group == RoleGroup.SuperAdmin) {
-            throw new HttpException('A user must related a tenant', HttpStatus.BAD_REQUEST);
+        // SuperAdmin users must NOT have a tenant
+        if (tenant && role.group === RoleGroup.SuperAdmin) {
+            throw new HttpException('SuperAdmin users cannot be assigned to a tenant', HttpStatus.BAD_REQUEST);
+        }
+        // Non-SuperAdmin users MUST have a tenant
+        if (!tenant && role.group !== RoleGroup.SuperAdmin) {
+            throw new HttpException('A user must be related to a tenant', HttpStatus.BAD_REQUEST);
         }
         try {
             const createdUser = await this.userRepository.save({ ...userData, role, tenant, password: hashedPassword }) // #TEST usership create ediliyor mu? eger oyleyse new Usershipleri kaldir diger yerlerden.
@@ -133,9 +138,9 @@ export class UsersService {
     }
 
     async delete(id: string, tenantIdOfUser?: string): Promise<void> {
-        const customWhereOptions: FindOptionsWhere<User>[] = [{ id }];
+        const customWhereOptions: FindOptionsWhere<User> = { id };
         if (tenantIdOfUser) {
-            customWhereOptions.push({ tenant: { id: tenantIdOfUser } })
+            customWhereOptions.tenant = { id: tenantIdOfUser };
         }
         const deleteToUser = await this.userRepository.findOne({
             where: customWhereOptions, relations: {

@@ -47,7 +47,7 @@ export class UsersController {
     @ApiOperation({ summary: 'Update a User' })
     @ApiResponse({ status: HttpStatus.OK })
     async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @GetUser('tenantId') tenantId?: string): Promise<UserDetailDto> {
-        return await this.userService.update(id, updateUserDto)
+        return await this.userService.update(id, updateUserDto, tenantId)
     }
 
     @RequirePermissions(AppPermission.UserWrite)
