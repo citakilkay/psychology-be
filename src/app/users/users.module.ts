@@ -8,8 +8,10 @@ import { Role } from 'src/database/entities/role.entity';
 import { Tenant, Usership } from 'src/database/entities';
 
 @Module({
-    controllers: [UsersController],
-    providers: [UsersService],
-    imports: [TypeOrmModule.forFeature([User, Role, Permission, Usership, Tenant])]
+  controllers: [UsersController],
+  providers: [UsersService],
+  imports: [
+    TypeOrmModule.forFeature([User, Role, Permission, Usership, Tenant]),
+  ],
 })
-export class UsersModule { }
+export class UsersModule {}

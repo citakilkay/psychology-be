@@ -8,6 +8,6 @@ import { RolePermission, User } from 'src/database/entities';
 @Module({
   controllers: [RolesController],
   providers: [RolesService],
-  imports: [TypeOrmModule.forFeature([Role, Permission, User, RolePermission])]
+  imports: [TypeOrmModule.forFeature([Role, Permission, User, RolePermission])],
 })
-export class RolesModule { }
+export class RolesModule {}

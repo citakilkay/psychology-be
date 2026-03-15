@@ -1,27 +1,34 @@
-import { Module } from "@nestjs/common";
-import { PassportModule } from "@nestjs/passport";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { User, Permission, Role, Usership } from "src/database/entities";
-import { AuthController } from "./auth.controller";
-import { AuthService } from "./auth.service";
-import { JwtStrategy, LocalStrategy, RefreshJwtStrategy } from "./strategies";
+import { Module } from '@nestjs/common';
+import { PassportModule } from '@nestjs/passport';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User, Permission, Role, Usership } from 'src/database/entities';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { JwtStrategy, LocalStrategy, RefreshJwtStrategy } from './strategies';
 // import { RolesGuard } from "./guards/roles.guard"; //#TODO: create a guard for the roles
-import { getConfig } from "src/shared/config";
-import { JwtModule } from "@nestjs/jwt";
+import { getConfig } from 'src/shared/config';
+import { JwtModule } from '@nestjs/jwt';
 
 const config = getConfig();
 @Module({
   imports: [
-    PassportModule,
     PassportModule.register({ defaultStrategy: 'jwt' }), // #TODO: session: true
-    JwtModule.register({ secret: config.jwt.JWT_SECRET, signOptions: { expiresIn: config.jwt.JWT_EXPIRED_IN_HOURS + 'h' } }),
+    JwtModule.register({
+      secret: config.jwt.JWT_SECRET,
+      signOptions: { expiresIn: config.jwt.JWT_EXPIRED_IN_HOURS + 'h' },
+    }),
     TypeOrmModule.forFeature([User, Permission, Role, Usership]),
   ],
-  providers: [AuthService, LocalStrategy, JwtStrategy, RefreshJwtStrategy /* , RolesGuard #TODO*/],
+  providers: [
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    RefreshJwtStrategy /* , RolesGuard #TODO*/,
+  ],
   controllers: [AuthController],
   exports: [JwtStrategy, PassportModule], // #TODO I don't know if I need this
 })
-export class AuthModule { }
+export class AuthModule {}
 
 // #TODO
 //  kalan yerden youtube sakura

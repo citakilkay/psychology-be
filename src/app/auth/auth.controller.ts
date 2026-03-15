@@ -1,56 +1,79 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { AuthService } from "./auth.service";
-import { LoginCredentialsDto, LoginResponseDto, RegisterCredentialsDto, RefreshTokenResponseDto, ReqUser, RequestWithUser } from "./dto";
-import { LocalAuthGuard } from "./guards";
-import { UserDetailDto } from "../users/dto/response.dto";
-import { RefreshAuthGuard } from "./guards/refresh-auth.guard";
-import { Response, Request } from "express";
-import { JwtAuthGuard } from "./guards/jwt-auth.guard";
-import { GetUser } from "src/shared/decorators";
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { AuthService } from './auth.service';
+import {
+  LoginCredentialsDto,
+  LoginResponseDto,
+  RegisterCredentialsDto,
+  RefreshTokenResponseDto,
+  ReqUser,
+} from './dto';
+import { LocalAuthGuard } from './guards';
+import { UserDetailDto } from '../users/dto/response.dto';
+import { RefreshAuthGuard } from './guards/refresh-auth.guard';
+import { Response } from 'express';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { GetUser } from 'src/shared/decorators';
 
 @Controller('auth')
 @ApiTags('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
-    @Post('register')
-    @ApiOperation({ summary: 'Register a new user' })
-    @ApiResponse({ status: HttpStatus.CREATED })
-    async register(@Body() registerCredentials: RegisterCredentialsDto): Promise<UserDetailDto> {
-        return await this.authService.register(registerCredentials)
-    }
+  @Post('register')
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiResponse({ status: HttpStatus.CREATED })
+  async register(
+    @Body() registerCredentials: RegisterCredentialsDto,
+  ): Promise<UserDetailDto> {
+    return await this.authService.register(registerCredentials);
+  }
 
-    @HttpCode(HttpStatus.OK)
-    @UseGuards(LocalAuthGuard)
-    @Post('login')
-    @ApiOperation({ summary: 'Login with Local Authenticate' })
-    @ApiResponse({ status: HttpStatus.OK }) // LoginCredentialsDto will be used for remember me
-    async login(@Body() loginCredentials: LoginCredentialsDto, @GetUser() user: ReqUser, @Res() res: Response): Promise<LoginResponseDto> {
-        const loginResponse = await this.authService.login(user, res);
-        res.status(HttpStatus.OK).json(loginResponse);
-        return loginResponse;
-    }
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(LocalAuthGuard)
+  @Post('login')
+  @ApiOperation({ summary: 'Login with Local Authenticate' })
+  @ApiResponse({ status: HttpStatus.OK }) // LoginCredentialsDto will be used for remember me
+  async login(
+    @Body() loginCredentials: LoginCredentialsDto,
+    @GetUser() user: ReqUser,
+    @Res() res: Response,
+  ): Promise<LoginResponseDto> {
+    const loginResponse = await this.authService.login(user, res);
+    res.status(HttpStatus.OK).json(loginResponse);
+    return loginResponse;
+  }
 
-    @HttpCode(HttpStatus.OK)
-    @UseGuards(RefreshAuthGuard)
-    @Post('refresh-token')
-    @ApiOperation({ summary: 'Refresh Token' })
-    @ApiResponse({ status: HttpStatus.OK, type: RefreshTokenResponseDto })
-    async refreshToken(@GetUser() user: ReqUser, @Res() res: Response): Promise<RefreshTokenResponseDto> {
-        const response = await this.authService.refreshToken(user, res)
-        res.status(HttpStatus.OK).json(response); // #TEST this one returns a new refresh token in cookies
-        return response;
-    }
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(RefreshAuthGuard)
+  @Post('refresh-token')
+  @ApiOperation({ summary: 'Refresh Token' })
+  @ApiResponse({ status: HttpStatus.OK, type: RefreshTokenResponseDto })
+  async refreshToken(
+    @GetUser() user: ReqUser,
+    @Res() res: Response,
+  ): Promise<RefreshTokenResponseDto> {
+    const response = await this.authService.refreshToken(user, res);
+    res.status(HttpStatus.OK).json(response); // #TEST this one returns a new refresh token in cookies
+    return response;
+  }
 
-    @HttpCode(HttpStatus.OK)
-    @UseGuards(JwtAuthGuard)
-    @Post('logout')
-    @ApiOperation({ summary: 'Logout a user' })
-    @ApiResponse({ status: HttpStatus.OK })
-    async logout(@GetUser() user: ReqUser, @Res() res: Response): Promise<void> {
-        await this.authService.logout(user.id);
-        res.clearCookie('refreshToken');
-        return
-    }
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  @ApiOperation({ summary: 'Logout a user' })
+  @ApiResponse({ status: HttpStatus.OK })
+  async logout(@GetUser() user: ReqUser, @Res() res: Response): Promise<void> {
+    await this.authService.logout(user.id);
+    res.clearCookie('refreshToken');
+    return;
+  }
 }

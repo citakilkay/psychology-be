@@ -1,4 +1,4 @@
-import { Logger, Module, OnModuleInit } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { UsersModule } from './app/users/users.module';
 import { PermissionsModule } from './app/permissions/permissions.module';
 import { RolesModule } from './app/roles/roles.module';
@@ -16,7 +16,14 @@ const synchronize = config.db.SYNCHRONIZE;
 const sslRejectUnauthorized = config.db.SSL_REJECT_UNAUTHORIZED;
 
 @Module({
-  imports: [SharedModule, SeedModule, UsersModule, PermissionsModule, RolesModule, AuthModule, SeedModule, ConfigModule.forRoot({ isGlobal: true }),
+  imports: [
+    SharedModule,
+    SeedModule,
+    UsersModule,
+    PermissionsModule,
+    RolesModule,
+    AuthModule,
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
@@ -30,17 +37,16 @@ const sslRejectUnauthorized = config.db.SSL_REJECT_UNAUTHORIZED;
         synchronize,
         ssl: {
           rejectUnauthorized: sslRejectUnauthorized,
-        }
+        },
       }),
       inject: [ConfigService],
-    })]
+    }),
+  ],
 })
 export class AppModule implements OnModuleInit {
-  constructor(private readonly seedService: SeedService
-  ) { }
+  constructor(private readonly seedService: SeedService) {}
 
   async onModuleInit() {
     await this.seedService.seed();
   }
-
 }
